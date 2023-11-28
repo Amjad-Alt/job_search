@@ -103,6 +103,10 @@ def init_chk_df(file):
     cols = df.columns.to_list()
     return cols
 #%%
+df = read('Occupation Data.txt')
+#%%
+init_chk_df('Occupation Data.txt')
+#%%
 # A. Skimming ############################################
 # Draft: Define skill-related files
 skill_keywords =['Occupation Data.txt','Abilities.txt','Interests.txt','Knowledge.txt','Skills.txt'
@@ -134,6 +138,7 @@ read('Occupation Data.txt').columns.to_list()
 - Two Text descriptions: Description_SOC(Job),  Description_Ele(Abilities)
 - Created 'Value_ratio' : Data Value/Maximum
 - Example 
+: *** idea 
 : Problem Sensitivity ability in Statisticians occupation need Level, have importance
    
                Title         Element Name  Scale Name  Minimum  Maximum  Data Value  Value_ratio
@@ -159,6 +164,8 @@ print(df.shape)
 key = 'O*NET-SOC Code'
 df = pd.merge(df, read('Occupation Data.txt'), how='left', on= key)
 print(df.shape)
+#%%
+df.head()
 #%%
 # 52 unique Ability names
 print(df['Element Name'].unique())
