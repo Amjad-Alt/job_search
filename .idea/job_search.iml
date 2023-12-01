@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <module version="4">
   <component name="NewModuleRootManager">
+    <orderEntry type="jdk" jdkName="Remote Python 3.10.12 (sftp://ubuntu@3.219.247.125:22/home/ubuntu/.virtualenvs/job_search/bin/python)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
 </module>

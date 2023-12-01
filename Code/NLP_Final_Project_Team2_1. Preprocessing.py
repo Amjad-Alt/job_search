@@ -1,17 +1,34 @@
-#%%
-# check path
 import os
-print(os.getcwd())
-#%%
-# Cloud Project directory (Nammin)
-# path = '/home/ubuntu/Project'
-# os.chdir(path)
-# print(os.getcwd())
+# Step 1: Check current path
+current_path = os.getcwd()
+print(f"Current working directory: {current_path}")
 
-# Move to the file directory
-# path = r'/home/ubuntu/Project/db_28_0_text'
-# os.chdir(path)
-# print(os.getcwd())
+# Step 2: Create /home/ubuntu if it doesn't exist
+target_directory = '/home/ubuntu'
+if not os.path.exists(target_directory):
+    try:
+        os.makedirs(target_directory)
+        print(f"Created directory: {target_directory}")
+    except Exception as e:
+        print(f"Error creating directory: {e}")
+else:
+    print(f"Directory already exists: {target_directory}")
+
+# Step 3: Create 'Project' directory within /home/ubuntu
+project_directory = os.path.join(target_directory, 'Project')
+if not os.path.exists(project_directory):
+    try:
+        os.makedirs(project_directory)
+        print(f"Created 'Project' directory: {project_directory}")
+    except Exception as e:
+        print(f"Error creating 'Project' directory: {e}")
+else:
+    print(f"'Project' directory already exists: {project_directory}")
+
+# Now your current working directory should be /home/ubuntu/Project
+print(f"Current working directory: {os.getcwd()}")
+
+
 
 #%%
 ###############################################################################
@@ -36,14 +53,40 @@ def open_url_zip(url):
     return
 #%%
 open_url_zip(url)
+
 #%%
-# C. Move to the directory (unzipped individual files)
-# path = r'./db_28_0_text' # Move to the file directory
-# os.chdir(path)
-# print(os.getcwd())
+# Move to the file directory
+path = r'/home/ubuntu/Project/db_28_0_text'
+os.chdir(path)
+print(os.getcwd())
+
 #%%
-files = os.listdir('')
+
+# Set the desired working directory path
+new_directory = "/home/ubuntu/Project/db_28_0_text/"
+
+# Change the current working directory
+os.chdir(new_directory)
+
+# Verify the new working directory
+print(f"Changed working directory to: {os.getcwd()}")
+
+
+#%%
+import os
+
+# Get the current working directory
+current_directory = os.getcwd()
+
+# List files in the current working directory
+files = os.listdir(current_directory)
+
+# Filter for files ending with '.txt'
 onet_raw = [file for file in files if file.endswith('.txt')]
+
+# Print the list of matching files
+print(onet_raw)
+
 #%%
 # 40 individual files
 print(len(onet_raw)-1)  #Include ReadMe file
@@ -274,7 +317,7 @@ df_Interests = df
 '''
 #%%
 df = read('Knowledge.txt')
-#print(df.head())
+print(df.head())
 #%%
 # Aggregate tables (Content dataframe + Base tables)
 df = join_key(df)
@@ -578,4 +621,39 @@ for filename in os.listdir(os.getcwd()):
 # Shape of df_Tools_Used: (41644, 6)
 # Shape of df_Tech_Skills: (32384, 8)
 # Shape of df_Work_Context: (289173, 22)
+
+#%%
+# First download kaggle in mobaxtream
+# then put your auth keys from kaggle t
+
+# CREATING Folder to store Resume dataset
+
+import pandas as pd
+import os
+import kaggle
+
+# Define the URL of the dataset download link
+dataset_name = 'gauravduttakiit/resume-dataset'
+destination_folder = '/home/ubuntu/Project/resume'  # Destination folder for the dataset
+
+# Download the dataset using the Kaggle API
+try:
+    kaggle.api.dataset_download_files(dataset_name, path=destination_folder, unzip=True)
+    print(f"Dataset downloaded to '{destination_folder}'")
+except Exception as e:
+    print(f"An error occurred while downloading the dataset: {e}")
+
+# Define the path to the downloaded CSV file
+csv_file_path = os.path.join(destination_folder, 'UpdatedResumeDataSet.csv')
+
+try:
+    # Load the CSV file into a DataFrame
+    df_resume = pd.read_csv(csv_file_path, encoding='utf-8')
+
+    # Display the first 10 rows of the DataFrame
+    print(df_resume.head(10))
+except FileNotFoundError:
+    print(f"CSV file not found at path: {csv_file_path}")
+except Exception as e:
+    print(f"An error occurred while reading the CSV file: {e}")
 
