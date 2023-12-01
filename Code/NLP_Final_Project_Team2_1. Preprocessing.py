@@ -623,13 +623,38 @@ for filename in os.listdir(os.getcwd()):
 # Shape of df_Work_Context: (289173, 22)
 
 #%%
-# First download kaggle in mobaxtream
-# then put your auth keys from kaggle t
+
+# Creating folder to store resume data inside Project:
+
+# Define the path to the "Project" directory
+project_directory = '/home/ubuntu/Project'
+
+# Define the name of the folder to create
+folder_name = 'resume'
+
+# Create the "resume" folder inside the "Project" directory
+resume_directory = os.path.join(project_directory, folder_name)
+
+# Check if the folder already exists or create it
+if not os.path.exists(resume_directory):
+    os.makedirs(resume_directory)
+    print(f"Created '{folder_name}' folder inside '{project_directory}'")
+else:
+    print(f"'{folder_name}' folder already exists inside '{project_directory}'")
+
+
+#%%
+# First download kaggle in mobaxtream termnal: pip install kaggle
+# Then you will see kaggle "/home/ubuntu/.kaggle/"
+# Then go to this: https://www.kaggle.com/settings
+# Then press on "Create New Token" which is your auth keys in json file
+# it will be downloaded in to your local
+# move it Mobaextreme '.kaggle' and past it there
+# so kaggle will work when you import it
 
 # CREATING Folder to store Resume dataset
 
 import pandas as pd
-import os
 import kaggle
 
 # Define the URL of the dataset download link
