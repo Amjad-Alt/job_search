@@ -652,33 +652,136 @@ else:
 # move it Mobaextreme '.kaggle' and past it there
 # so kaggle will work when you import it
 
-# CREATING Folder to store Resume dataset
-
+import os
+import os
 import pandas as pd
 import kaggle
 
-# Define the URL of the dataset download link
-dataset_name = 'gauravduttakiit/resume-dataset'
-destination_folder = '/home/ubuntu/Project/resume'  # Destination folder for the dataset
+def download_dataset(dataset_name, destination_folder):
+    try:
+        kaggle.api.dataset_download_files(dataset_name, path=destination_folder, unzip=True)
+        print(f"Dataset downloaded to '{destination_folder}'")
+        return True
+    except Exception as e:
+        print(f"An error occurred while downloading the dataset: {e}")
+        return False
 
-# Download the dataset using the Kaggle API
-try:
-    kaggle.api.dataset_download_files(dataset_name, path=destination_folder, unzip=True)
-    print(f"Dataset downloaded to '{destination_folder}'")
-except Exception as e:
-    print(f"An error occurred while downloading the dataset: {e}")
+def read_dataset(file_path):
+    try:
+        df = pd.read_csv(file_path, encoding='utf-8')
+        print("Dataset loaded successfully.")
+        return df
+    except FileNotFoundError:
+        print(f"CSV file not found at path: {file_path}")
+        return None
+    except Exception as e:
+        print(f"An error occurred while reading the CSV file: {e}")
+        return None
 
-# Define the path to the downloaded CSV file
-csv_file_path = os.path.join(destination_folder, 'UpdatedResumeDataSet.csv')
+def clean_resume_data(df):
+    # Replace newline characters and other formatting issues
+    df['Resume'] = df['Resume'].str.replace(r'\r\n', ' ', regex=True)
+    df['Resume'] = df['Resume'].str.replace(r'â¢', '-', regex=True)
+    df['Resume'] = df['Resume'].str.replace(r'â¢', '*', regex=True)
+    # Further cleaning steps can be added here
+    return df
 
-try:
+def initial_analysis(df):
+    print(f"Dataset shape: {df.shape}")
+    print(f"First 5 rows:\n{df.head()}")
+    print(f"Data types:\n{df.dtypes}")
+    print(f"Null values in each column:\n{df.isnull().sum()}")
+    print(f"Unique categories:\n{df['Category'].value_counts()}")
+
+def main():
+    dataset_name = 'gauravduttakiit/resume-dataset'
+    destination_folder = '/home/ubuntu/Project/resume'  # Complete the path
+
+    # Downloading the dataset
+    if download_dataset(dataset_name, destination_folder):
+        file_path = os.path.join(destination_folder, 'UpdatedResumeDataSet.csv')
+        df_resume = read_dataset(file_path)
+        if df_resume is not None:
+            df_resume_clean = clean_resume_data(df_resume)
+            initial_analysis(df_resume_clean)
+
+if __name__ == "__main__":
+    main()
+#%%
+    """
+    # Initial Analysis of the Resume Dataset
+    # First 5 rows:
+    #       Category                                             Resume
+    # 0  Data Science  Skills * Programming Languages: Python (pandas...
+    # 1  Data Science  Education Details  May 2013 to May 2017 B.E   ...
+    # 2  Data Science  Areas of Interest Deep Learning, Control Syste...
+    # 3  Data Science  Skills - R - Python - SAP HANA - Tableau - SAP...
+    # 4  Data Science  Education Details   MCA   YMCAUST,  Faridabad,...
+
+    # Data types:
+    # Category    object
+    # Resume      object
+    # dtype: object
+
+    # Null values in each column:
+    # Category    0
+    # Resume      0
+    # dtype: int64
+
+    # Unique categories:
+    # Java Developer               84
+    # Testing                      70
+    # DevOps Engineer              55
+    # Python Developer             48
+    # Web Designing                45
+    # HR                           44
+    # Hadoop                       42
+    # Blockchain                   40
+    # ETL Developer                40
+    # Operations Manager           40
+    # Data Science                 40
+    # Sales                        40
+    # Mechanical Engineer          40
+    # Arts                         36
+    # Database                     33
+    # Electrical Engineering       30
+    # Health and fitness           30
+    # PMO                          30
+    # Business Analyst             28
+    # DotNet Developer             28
+    # Automation Testing           26
+    # Network Security Engineer    25
+    # SAP Developer                24
+    # Civil Engineer               24
+    # Advocate                     20
+    # dtype: int64
+    """
+
+
+#%%
+# Saving the file to the Cloud on the cloened git repo
+def main():
+    # Define the path to the downloaded CSV file
+    csv_file_path = '/home/ubuntu/Project/resume/UpdatedResumeDataSet.csv'
+
     # Load the CSV file into a DataFrame
-    df_resume = pd.read_csv(csv_file_path, encoding='utf-8')
+    print("Attempting to load dataset...")
+    df = read_dataset(csv_file_path)
 
-    # Display the first 10 rows of the DataFrame
-    print(df_resume.head(10))
-except FileNotFoundError:
-    print(f"CSV file not found at path: {csv_file_path}")
-except Exception as e:
-    print(f"An error occurred while reading the CSV file: {e}")
+    if df is not None:
+        print("Cleaning data...")
+        df_cleaned = clean_resume_data(df)  # Assuming you have this function
 
+        # Save the cleaned DataFrame as a pickle
+        destination_folder = '/home/ubuntu/job_search/Data_cleaned'
+        file_name = 'resume_data_cleaned.pkl'
+        print("Attempting to save DataFrame as pickle...")
+        save_as_pickle(df_cleaned, destination_folder, file_name)
+    else:
+        print("Failed to load dataset.")
+
+
+if __name__ == "__main__":
+    main()
+
+# Then I Draged to the local file Cleaned data...
