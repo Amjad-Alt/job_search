@@ -41,6 +41,3 @@ print(df_resume_data)
 
 
 
-
-
-
