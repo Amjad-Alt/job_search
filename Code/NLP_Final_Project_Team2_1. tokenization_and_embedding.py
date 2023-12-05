@@ -37,6 +37,37 @@ df_resume_data = load_pickle(resume_data_path)
 
 # Testing the dataframes:
 print(df_abilities.head())
-print(df_resume_data.head())
+print(df_resume_data)
 
 #
+import pandas as pd
+from transformers import BertTokenizer, BertModel
+from sklearn.metrics.pairwise import cosine_similarity
+import numpy as np
+from keras.preprocessing.sequence import pad_sequences
+import torch
+
+# Load model and tokenizer
+tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+model = BertModel.from_pretrained('bert-base-uncased')
+
+# Tokenize and truncate/pad resumes
+max_length = 512  # BERT's maximum sequence length
+tokenized = df_resume_data['Resume'].apply(lambda x: tokenizer.encode(x, add_special_tokens=True, max_length=max_length, truncation=True))
+
+# Padding and creating attention masks
+padded = pad_sequences(tokenized, maxlen=max_length, padding='post', truncating='post')
+attention_mask = np.where(padded != 0, 1, 0)
+
+# Convert to PyTorch tensors
+input_ids = torch.tensor(padded)
+attention_mask = torch.tensor(attention_mask)
+
+# Get embeddings
+with torch.no_grad():
+    outputs = model(input_ids, attention_mask=attention_mask)
+    embeddings = outputs.last_hidden_state[:, 0, :].numpy()
+
+# Compute similarity
+cosine_similarity_matrix = cosine_similarity(embeddings)
+
