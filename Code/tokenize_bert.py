@@ -2,11 +2,11 @@
 
 from transformers import BertTokenizer, BertModel
 import torch
+from sklearn.metrics.pairwise import cosine_similarity
 # %%
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 model = BertModel.from_pretrained('bert-base-uncased')
 # %%
-
 
 def get_bert_embeddings(text_list):
     # Ensure text_list is a list of strings
@@ -20,7 +20,6 @@ def get_bert_embeddings(text_list):
     return embeddings
 # %%
 
-
 batch_size = 5  # Adjust based on your computational capacity
 embeddings = []
 
@@ -33,19 +32,23 @@ for i in range(0, len(cleaned_resumes), batch_size):
 embeddings = torch.cat(embeddings, dim=0)
 # %%
 
-
-def get_bert_embeddings(text):
-    # Tokenize and create tensor inputs
-    inputs = tokenizer(text, return_tensors='pt',
-                       padding='max_length', truncation=True, max_length=512)
-    # Get outputs from the model
-    with torch.no_grad():
-        outputs = model(**inputs)
-    # Extract embeddings from the output
-    embeddings = outputs.last_hidden_state[:, 0, :]
-    return embeddings
-
-
 # Apply the function to each resume
-# Assuming 'cleaned_resumes' is your DataFrame column with resume texts
-embeddings = cleaned_resumes.apply(get_bert_embeddings)
+# Process resumes
+resume_embeddings = cleaned_resumes.apply(get_bert_embeddings)
+
+# Process job descriptions
+job_description_embeddings = cleaned_job_descriptions.apply(
+    get_bert_embeddings)
+#%%
+# Calculate similarities 
+
+# Assuming you want to compare with the first job description
+job_emb = job_description_embeddings.iloc[0].numpy()
+resume_embs = resume_embeddings.apply(lambda x: x.numpy())
+
+# Calculating similarity for each resume
+similarities = resume_embs.apply(
+    lambda x: cosine_similarity([x], [job_emb])[0][0])
+
+# Getting the top matching resumes
+top_matches = similarities.nlargest(3)  # Adjust the number as needed
