@@ -51,6 +51,16 @@ from Utils_Team2 import *  # Call functions as Utils
 # https://www.kaggle.com/datasets/gauravduttakiit/resume-dataset
 ###############################################################################
 #%%
+# Resume Update (From Github repo)
+url = r'https://raw.githubusercontent.com/Amjad-Alt/job_search/Amjad/Code/resumes_data.csv'
+df_resume_2 = pd.read_csv(url)
+
+#%%
+init_chk_df_2(df_resume_2)
+# Resume Update (From Github repo)
+
+#%%
+# # 1 (Kaggle resume)
 # First download kaggle in mobaxtream termnal: pip install kaggle
 # Then you will see kaggle "/home/ubuntu/.kaggle/"
 # Then go to this: https://www.kaggle.com/settings
@@ -239,42 +249,6 @@ def main():
 #%%
 if __name__ == "__main__":
     main()
-#%%
-# Sample check
-# filter = (df_Abilities['Title'] == 'Statisticians') & (df_Abilities['Element Name'] == 'Problem Sensitivity')
-# sample = df_Abilities[filter]
-# col = ['Title', 'Element Name', 'Scale Name', 'Minimum', 'Maximum', 'Data Value', 'Value_ratio']
-# print(sample[col].to_string())
-
-# filter = (df_Tech_Skills['Title'] == 'Statisticians') & (df_Tech_Skills['In Demand'] == 'Y')
-# sample = df_Tech_Skills[filter]
-
-#%%
-# Check Point (or Just able to go through the next part without doing this)
-#: Load Temporary Saved pickle DataFrames (saved 10 draft ONet datasets)
-
-# Temporary : Save
-# df.to_pickle(("./df_Work_Values.pkl"))
-# df_Abilities = pd.read_pickle(("./df_Work_Values.pkl"))
-
-# new_directory = "/home/ubuntu/Project/Data_cleaned/JOB_ONET_data_pkl"
-# os.chdir(new_directory)
-# print(f"Changed working directory to: {os.getcwd()}")
-# #
-# def search_df(format):
-#     df_names =[]
-#     for filename in os.listdir(os.getcwd()):
-#         # check if the file is a .pkl file
-#         if filename.endswith(format):
-#             filepath = os.path.join(os.getcwd(), filename)
-#             df_name = filename.split('.')[0]
-#             df_names.append(df_name)
-#             globals()[df_name] = pd.read_pickle(filepath)
-#             print(f'Shape of {df_name}: {globals()[df_name].shape}')
-#     return df_names
-#
-# df_names = search_df('.pkl')  # Load stored the dataframes
-#%%
 
 #%%
 ###############################################################################
@@ -293,23 +267,12 @@ if __name__ == "__main__":
 # 2. Make Final Job dataset with Full_Job_Description corpus (Merge of 5 Job_Description corpus)
 #  Join to the Job Occupation dataset
 # 'Job_Description' + 'Description_Abilities' .. + 'Description_Interests'
+# (Add on Dec 7)
+# 1. add Job_zone (for classification model)
+# 2. prepare ref.data sets for inference(streamlit): Job zone, Related Jobs, Work sets
+#  TBD: Think of other version of Job_data (size of Corpus)
+#    (Current) Top 3 elements by each category > (Expand) Top 5, 10..
 ###############################################################################
-
-#%%
-# Sample check
-# df = df_Abilities
-# col2 = ['Title', 'Element Name','Description_Ele','Data Value','Value_ratio']
-# filter = (df['Title'] == 'Statisticians') & (df['Scale ID'] == 'LV')
-# filter2 = (df['Title'] == title) & (df['Scale ID'] == 'LV') & (df['Value_ratio'] > 0.5)
-# sample = df[filter][col2]
-#
-# # Distribution of elements' level values
-# import seaborn as sns
-# import matplotlib.pyplot as plt
-# sns.set_theme(style="darkgrid")
-# sns.displot(sample, x="Value_ratio", kde = True)
-# plt.tight_layout()
-# plt.show()
 
 #%%
 #  1. Make Final Job dataset with Full_Job_Description corpus
@@ -353,24 +316,95 @@ df['Description_Job'] = df['Description'] + ' ' + df['Description_Abilities'] \
 #%%
 # # Final: Sample Check
 # title = 'Statisticians'  #Dentists, General
-# col = ['Title', 'Description_Job']
 # filter = (df['Title'] == title)
-# print(df[filter][col].to_string())
+# print(df[filter][ ['Title', 'Description_Job']].to_string())
 # print(len(df[filter]['Description_Job'].values[0])) #Length: 3343
 #%%
-# Check Point
-#save_as_pickle(df, '/home/ubuntu/Project/Data_cleaned', 'df_Occupation.pkl')
-
+#save_as_pickle(df, '/home/ubuntu/Project/Data_cleaned', 'df_Occupation.pkl') # Check Point
 #%%
 path = '/home/ubuntu/Project/Data_cleaned'
 df_job = pd.read_pickle(os.path.join(path, 'df_Occupation.pkl'))
 print(df_job.shape)
 
 #%%
-df_resume = pd.read_pickle(os.path.join(path, 'resume_data_cleaned.pkl'))
-print(df_resume.shape)
+# df_resume = pd.read_pickle(os.path.join(path, 'resume_data_cleaned.pkl'))
+# print(len(df_resume.iloc[:1,1:2].values[0][0])) # 4744
+#%%
+#%%
+# (Add on Dec 7)
+# 1. add Job_zone (for classification model)
+# 2. prepare ref.data sets for inference(streamlit): Job zone, Related Jobs, Work sets
+
+#%%
+# Ref.Datasets
+raw_onet_dir = "/home/ubuntu/Project/db_28_0_text/"
+df_Job_Zone = read(os.path.join(raw_onet_dir,'Job Zones.txt'))
+df_Job_Zone_Ref = read(os.path.join(raw_onet_dir,'Job Zone Reference.txt'))
+df_relat_Jobs = read(os.path.join(raw_onet_dir,'Related Occupations.txt'))
+#%%
+# save_as_pickle(df_Job_Zone, '/home/ubuntu/Project/Data_cleaned/JOB_ONET_data_pkl', 'df_Job_Zone.pkl')
+# save_as_pickle(df_Job_Zone_Ref, '/home/ubuntu/Project/Data_cleaned/JOB_ONET_data_pkl', 'df_Job_Zone_Ref.pkl')
+# save_as_pickle(df_relat_Jobs, '/home/ubuntu/Project/Data_cleaned/JOB_ONET_data_pkl', 'df_relat_Jobs.pkl')
+
+#%%
+# Add job zone
+print(df_job.shape)
+df_job = pd.merge(df_job, df_Job_Zone[['O*NET-SOC Code','Job Zone']], how='left', on='O*NET-SOC Code')
+print(df_job.shape)
+#%%
+os.getcwd()
+#%%
+#save_as_pickle(df_job, '/home/ubuntu/Project/Data_cleaned', 'df_Occupation.pkl') # Check Point
+#df_job.to_csv("./df_Occupation.csv")
+
+#%%
+# Sample check (for identifying a certain job, info)
+# filter = (df_Abilities['Title'] == 'Statisticians') & (df_Abilities['Element Name'] == 'Problem Sensitivity')
+# sample = df_Abilities[filter]
+# col = ['Title', 'Element Name', 'Scale Name', 'Minimum', 'Maximum', 'Data Value', 'Value_ratio']
+# print(sample[col].to_string())
+
+# filter = (df_Tech_Skills['Title'] == 'Statisticians') & (df_Tech_Skills['In Demand'] == 'Y')
+# sample = df_Tech_Skills[filter]
+
+#%%
+# Check Point
+#: Load Temporary Saved pickle DataFrames (saved 10 draft ONet datasets)
+
+# Temporary : Save
+# df.to_pickle(("./df_Work_Values.pkl"))
+# df_Abilities = pd.read_pickle(("./df_Work_Values.pkl"))
+
+# new_directory = "/home/ubuntu/Project/Data_cleaned/JOB_ONET_data_pkl"
+# os.chdir(new_directory)
+# print(f"Changed working directory to: {os.getcwd()}")
+# #
+# def search_df(format):
+#     df_names =[]
+#     for filename in os.listdir(os.getcwd()):
+#         # check if the file is a .pkl file
+#         if filename.endswith(format):
+#             filepath = os.path.join(os.getcwd(), filename)
+#             df_name = filename.split('.')[0]
+#             df_names.append(df_name)
+#             globals()[df_name] = pd.read_pickle(filepath)
+#             print(f'Shape of {df_name}: {globals()[df_name].shape}')
+#     return df_names
+#
+# df_names = search_df('.pkl')  # Load stored the dataframes
+#%%
 #%%
 # Sample check
-# print(len(resume_data_cleaned.iloc[:1,1:2].values[0][0])) # 4744
-#%%
-
+# df = df_Abilities
+# col2 = ['Title', 'Element Name','Description_Ele','Data Value','Value_ratio']
+# filter = (df['Title'] == 'Statisticians') & (df['Scale ID'] == 'LV')
+# filter2 = (df['Title'] == title) & (df['Scale ID'] == 'LV') & (df['Value_ratio'] > 0.5)
+# sample = df[filter][col2]
+#
+# # Distribution of elements' level values
+# import seaborn as sns
+# import matplotlib.pyplot as plt
+# sns.set_theme(style="darkgrid")
+# sns.displot(sample, x="Value_ratio", kde = True)
+# plt.tight_layout()
+# plt.show()
