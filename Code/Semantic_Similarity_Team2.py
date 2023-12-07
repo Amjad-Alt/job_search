@@ -47,21 +47,25 @@ from Utils_Team2 import *  # Call functions as Utils
 ################################################
 # Load file (Option 1. Use Github(URL), 2. Use Cloud directory,
 ################################################
-# 1. Job (2. Use Cloud directory)
+# 1. Job (Pickle, 2. Use Cloud directory)
 path = '/home/ubuntu/Project/Data_cleaned'
 df_job = pd.read_pickle(os.path.join(path, 'df_Occupation.pkl'))
 print(df_job.shape)
+
 # 2. Resume_previous one (2. Use Cloud directory)
 df_resume = pd.read_pickle(os.path.join(path, 'resume_data_cleaned.pkl'))
 print(df_resume.shape)
+
 #%%
-init_chk_df_2(df_resume)
-#%%
+# 1. Job (CSV 1. Use Github(URL))
+url = r'https://raw.githubusercontent.com/Amjad-Alt/job_search/Nammin-Woo/Data_cleaned/df_Occupation.csv'
+df_job = pd.read_csv(url)
+
 # 2. Resume Update (1. Use Github(URL))
 url = r'https://raw.githubusercontent.com/Amjad-Alt/job_search/Amjad/Code/resumes_data.csv'
 df_resume = pd.read_csv(url)
+
 init_chk_df_2(df_resume)  #['ID', 'Resume', 'Category']
-#%%
 df_resume = df_resume[['Category', 'Resume']]
 #%%
 ###############################################################################
