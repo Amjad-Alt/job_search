@@ -66,3 +66,39 @@ loss.backward()
 optimizer.step()
 
 print(f"Loss: {loss.item()}")
+
+
+#----------------------------------------------------------------------------------------------------
+# Example to create labels based on cosin via Bert
+from transformers import BertTokenizer, BertModel
+import torch
+from torch.nn.functional import cosine_similarity
+
+# Load pre-trained model and tokenizer
+tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+model = BertModel.from_pretrained('bert-base-uncased')
+
+# Function to get BERT embeddings
+def get_bert_embedding(text):
+    inputs = tokenizer(text, return_tensors='pt', max_length=512, truncation=True, padding='max_length')
+    outputs = model(**inputs)
+    return outputs.last_hidden_state.mean(dim=1)
+
+# Example texts (replace these with actual resume and job description text)
+text1 = "Experienced software developer with expertise in Python and Java..."
+text2 = "Looking for a skilled programmer with experience in Python and web development..."
+
+# Get embeddings
+embedding1 = get_bert_embedding(text1)
+embedding2 = get_bert_embedding(text2)
+
+# Calculate cosine similarity
+similarity = cosine_similarity(embedding1, embedding2)
+print(f"Cosine Similarity: {similarity.item()}")
+
+# Define a threshold for similarity
+threshold = 0.7
+
+# Assign label based on similarity
+label = 1 if similarity.item() > threshold else 0
+print(f"Label: {label}")
