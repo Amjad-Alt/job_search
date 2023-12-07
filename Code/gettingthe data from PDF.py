@@ -83,7 +83,17 @@ print(ARTS_df)
 print(SALES_df)
 print(TEACHER_df)
 #%%
+# List of all DataFrames
+dfs = [
+    ACCOUNTANT_df, ADVOCATE_df, AGRICULTURE_df, APPAREL_df, ARTS_df, 
+    AUTOMOBILE_df, AVIATION_df, BANKING_df, BPO_df, BUSINESS_DEVELOPMENT_df, 
+    CHEF_df, CONSTRUCTION_df, CONSULTANT_df, DESIGNER_df, DIGITAL_MEDIA_df, 
+    ENGINEERING_df, FINANCE_df, FITNESS_df, HEALTHCARE_df, HR_df, 
+    INFORMATION_TECHNOLOGY_df, PUBLIC_RELATIONS_df, SALES_df, TEACHER_df
+]
 
+# Concatenating all DataFrames into one
+combined_df = pd.concat(dfs, ignore_index=True)
+#%%
 # save the DataFrame to a CSV file
-ACCOUNTANT_df.to_csv('resumes_data.csv', index=False)
-
+combined_df.to_csv('resumes_data.csv', index=False)
