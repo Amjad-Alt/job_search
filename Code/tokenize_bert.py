@@ -39,16 +39,3 @@ resume_embeddings = cleaned_resumes.apply(get_bert_embeddings)
 # Process job descriptions
 job_description_embeddings = cleaned_job_descriptions.apply(
     get_bert_embeddings)
-#%%
-# Calculate similarities 
-
-# Assuming you want to compare with the first job description
-job_emb = job_description_embeddings.iloc[0].numpy()
-resume_embs = resume_embeddings.apply(lambda x: x.numpy())
-
-# Calculating similarity for each resume
-similarities = resume_embs.apply(
-    lambda x: cosine_similarity([x], [job_emb])[0][0])
-
-# Getting the top matching resumes
-top_matches = similarities.nlargest(3)  # Adjust the number as needed
