@@ -1,5 +1,5 @@
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
+
 #%%
 
 # job discription 
@@ -18,10 +18,3 @@ vectorized_texts = vectorizer.fit_transform(combined_texts)
 resumes_vec = vectorized_texts[:len(df)]
 job_desc_vec = vectorized_texts[len(df):]
 
-#%%
-# Calculate similarity
-for i, job_vec in enumerate(job_desc_vec):
-    similarities = cosine_similarity(job_vec, resumes_vec)
-    top_resume_indices = similarities.argsort()[0][-3:]  # Gets top 3 resumes
-    top_resumes = df.iloc[top_resume_indices]['ID']
-    print(f"Top resumes for job {i}: {top_resumes.values}")
