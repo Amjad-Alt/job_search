@@ -1,3 +1,15 @@
+
+### Project folder on the Cloud
+import os
+os.chdir(os.path.join('/home/ubuntu', 'Project'))
+#%%
+# Import
+import os
+import pandas as pd
+import sys
+sys.path.insert(0, os.getcwd())
+from Utils_Team2 import *  # Call functions as Utils
+#os.listdir(os.getcwd())
 from datasets import load_dataset,Dataset,DatasetDict
 from transformers import DataCollatorWithPadding,AutoModelForSequenceClassification, Trainer, TrainingArguments,AutoTokenizer,AutoModel,AutoConfig
 from transformers.modeling_outputs import TokenClassifierOutput
@@ -5,42 +17,78 @@ import torch
 import torch.nn as nn
 import pandas as pd
 #%%
-# (Cloud) Move to the file directory
-import os
-path = r'/home/ubuntu/NLP_local/4. Transformer_Class_ex_9_10' #
-os.chdir(path)
-print(os.getcwd())
+################################################
+# Load file (Option 1. Use Github(URL), 2. Use Cloud directory,
+################################################
+# 1. Job (Pickle, 2. Use Cloud directory)
+path = '/home/ubuntu/Project/Data_cleaned'
+df_job = pd.read_pickle(os.path.join(path, 'df_Occupation.pkl'))
+print(df_job.shape)
 #%%
-###############################################
-# 1. Load input data (Kaggle) and Preprocessing
-###############################################
-# News Headlines Dataset For Sarcas
-# !mkdir ~/.kaggle
-# !cp kaggle.json ~/.kaggle/
-# !chmod 600 ~/.kaggle/kaggle.json
-# !kaggle datasets download -d rmisra/news-headlines-dataset-for-sarcasm-detection
+df_job.to_csv('./df_Occupation.csv')
 #%%
-# Load data to use in Transformer (load_dataset())
-data=load_dataset("json",data_files="./Sarcasm_Headlines_Dataset_v2.json")
+# 2. Resume_previous one (2. Use Cloud directory)
+df_resume = pd.read_pickle(os.path.join(path, 'resume_data_cleaned.pkl'))
+print(df_resume.shape)
 #%%
-data #28619,
+# Definition of Job zone
+df_Job_Zone_Ref = read(os.path.join('/home/ubuntu/Project/db_28_0_text/','Job Zone Reference.txt'))
+# ['Job Zone', 'Name', 'Experience', 'Education', 'Job Training', 'Examples', 'SVP Range']
+print(df_Job_Zone_Ref[['Job Zone', 'Name']].to_string()) # Job zone 1~5 (easy ~ difficult)
 #%%
-# Explore data (using Pandas)
-temp = pd.read_json("./Sarcasm_Headlines_Dataset_v2.json", lines=True)
-temp.head()
-temp.is_sarcastic.value_counts() #2 categories
+url = r'https://raw.githubusercontent.com/Amjad-Alt/job_search/Nammin-Woo/Data_cleaned/df_Occupation.csv'
+df_job = pd.read_csv(url)
+#%%
+df_job.columns.to_list()
+#%%
+def create_zone_model_data():
+    # Load Preprocessed Job data and preprocess it for modeling
+    url = r'https://raw.githubusercontent.com/Amjad-Alt/job_search/Nammin-Woo/Data_cleaned/df_Occupation.csv'
+    df_job = pd.read_csv(url)
+    # Explore Target # ['O*NET-SOC Code',  'Description_Job', 'Job Zone']
+    # . 1~5, Nan (9%)
+    # : wide range of characteristics which do not fit into one of the detailed O*NET-SOC occupations.
+    print("Original")
+    print(df_job['Job Zone'].value_counts(normalize=True, dropna=False).sort_index())
+    # df_job[df_job['Job Zone'].isnull()==1].Title
+    df_job.dropna(subset=['Job Zone'], inplace=True)
+    # df_job['Job Zone'].isnull().sum()
+    print("After Cleansing NaN Label")
+    print(df_job['Job Zone'].value_counts(normalize=True, dropna=False).sort_index())
+    df_job.rename(columns={'Job Zone': 'label'}, inplace=True)
+    df_job = df_job[['Description_Job', 'label']]
+    return df_job
+#%%
+df = create_zone_model_data()
+#%%
+df_job = df_job.to_csv("./data.csv")
+
+
 
 #%%
-# preprocessing data (format: transformer - pandas - transformer)
-data=data.rename_column("is_sarcastic","label")
-data=data.remove_columns(['article_link'])
 
+#%%
+
+#%%
+# Convert into Transformer dataset
+import copy
+data = copy.deepcopy(df_job)
+data.rename(columns={'Job Zone': 'label'},inplace=True)
+data=data[['Description_Job','label']]
+data.to_csv("./data.csv")
+#%%
+
+
+#%%
 data.set_format('pandas')
 data=data['train'][:]
 
 data.drop_duplicates(subset=['headline'],inplace=True)
 data=data.reset_index()[['headline','label']]
 data=Dataset.from_pandas(data)
+
+#%%
+data=load_dataset("csv",data_files="./Sarcasm_Headlines_Dataset_v2.json")
 #%%
 data  #28503
 #%%
