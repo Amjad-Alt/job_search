@@ -1,4 +1,6 @@
 
+import numpy as np
+from sklearn.preprocessing import OneHotEncoder
 from nltk.collocations import BigramCollocationFinder, BigramAssocMeasures
 from nltk.tokenize import word_tokenize, MWETokenizer
 import pandas as pd
@@ -131,3 +133,12 @@ df_occupation = df_occupation[(df_occupation['Title'] != 'NA') & (
 # Check for NaN values again
 nan_counts = df_occupation.isna().sum()
 print(f"Number of NaN in each column after cleaning: {nan_counts}")
+
+# %%
+
+# One-hot encode the job titles
+encoder = OneHotEncoder(sparse=False)
+job_titles_encoded = encoder.fit_transform(
+    np.array(df_occupation['Title']).reshape(-1, 1))
+
+# %%
