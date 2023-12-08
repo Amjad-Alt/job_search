@@ -3,9 +3,198 @@ from urllib.request import urlopen
 from zipfile import ZipFile
 from io import BytesIO
 import os
-import pandas as pd
 #import kaggle
+from datasets import load_dataset,Dataset,DatasetDict
+from transformers import DataCollatorForLanguageModeling
+from transformers import DataCollatorWithPadding,AutoModelForSequenceClassification, Trainer, TrainingArguments,AutoTokenizer,AutoModel,AutoConfig
+from transformers.modeling_outputs import TokenClassifierOutput
+from sentence_transformers import SentenceTransformer
+import scipy.spatial
+import torch
+import torch.nn as nn
+import pandas as pd
+#%%
+# ################################################
+# [Classification] Model to Predict Job zone (with Job Corpus)
+# Model 1. Fine-tuning  roberta-based Model
+#
+# ################################################
 
+def create_zone_model_data():
+    ''''
+    # Create data to make Classification Model (Ready to Load by Transformer)
+    '''
+    # Load current data (cleaned ONET JOB Corpus)
+    url = r'https://raw.githubusercontent.com/Amjad-Alt/job_search/Nammin-Woo/Data_cleaned/df_Occupation.csv'
+    df_job = pd.read_csv(url)
+    # Explore Target # ['O*NET-SOC Code',  'Description_Job', 'Job Zone']
+    # . 1~5, Nan (9%)
+    # : wide range of characteristics which do not fit into one of the detailed O*NET-SOC occupations.
+    print("Original")
+    print(df_job['Job Zone'].value_counts(normalize=True, dropna=False).sort_index())
+    # df_job[df_job['Job Zone'].isnull()==1].Title
+    df_job.dropna(subset=['Job Zone'], inplace=True)
+    # df_job['Job Zone'].isnull().sum()
+    df_job['Job Zone'] = df_job.loc[:, 'Job Zone'].astype('int64')  #change label type to INT
+    print("After Cleansing NaN Label")
+    df_job['Job Zone'] = df_job['Job Zone'] -1  #Align to Transformer (label should start from 0)
+    print(df_job['Job Zone'].value_counts(normalize=True, dropna=False).sort_index())
+    df_job.rename(columns={'Job Zone': 'label'}, inplace=True)
+    df_job = df_job[['Description_Job', 'label']]
+    return df_job
+
+def prep_zone_model_train_data(data):
+    '''Preprocessing of Transformer data'''
+    data = data.remove_columns(['Unnamed: 0'])
+    data.set_format('pandas')
+    data = data['train'][:]
+    data.drop_duplicates(subset=['Description_Job'], inplace=True)
+    data = data.reset_index()[['Description_Job', 'label']]
+    data = Dataset.from_pandas(data)
+    return data
+
+def train_test_split(data, test_size):
+    # train(70%), test(30%)
+    train_test = data.train_test_split(test_size=test_size, seed=15)
+    # gather as a single DatasetDict
+    data = DatasetDict({
+        'train': train_test['train'],
+        'test': train_test['test']})
+    return data
+
+def tokenize(batch):
+    # Define pretrained model
+    checkpoint = "cardiffnlp/twitter-roberta-base-emotion"
+    tokenizer = AutoTokenizer.from_pretrained(checkpoint)
+    tokenizer.model_max_len = 512
+    return tokenizer(batch["Description_Job"], truncation=True,max_length=512)
+
+class CustomModel(nn.Module):
+    def __init__(self, checkpoint, num_labels):
+        super(CustomModel, self).__init__()
+        self.num_labels = num_labels
+
+        # Load Model with given checkpoint and extract its body
+        self.model = model = AutoModel.from_pretrained(checkpoint, config=AutoConfig.from_pretrained(checkpoint,
+                                                                                                     output_attentions=True,
+                                                                                                        output_hidden_states=True))
+        #The Dropout layer: used to prevent overfitting
+        self.dropout = nn.Dropout(0.1)  # 10%: set to zero when training
+        self.classifier = nn.Linear(768, num_labels)  # load and initialize weights
+        # 768: Bert Base (# of hidden layers, w 12 attention layers)
+
+    def forward(self, input_ids=None, attention_mask=None, labels=None):
+        # Extract outputs from the body
+        # CLS token
+        outputs = self.model(input_ids=input_ids, attention_mask=attention_mask)
+
+        # Add custom layers
+        sequence_output = self.dropout(outputs[0])  # outputs[0]=last hidden state
+
+        logits = self.classifier(sequence_output[:, 0, :].view(-1, 768))  # calculate losses
+
+        loss = None
+        #- Loss Function
+        if labels is not None:
+            loss_fct = nn.CrossEntropyLoss()
+            # Option: BCELoss(): Binary classification
+            #loss_fct = nn.BCELoss()
+
+            loss = loss_fct(logits.view(-1, self.num_labels), labels.view(-1))
+
+        return TokenClassifierOutput(loss=loss, logits=logits, hidden_states=outputs.hidden_states,
+                                     attentions=outputs.attentions)
+
+def create_zone_model_test_resume(): # 2481 resumes
+    url = r'https://raw.githubusercontent.com/Amjad-Alt/job_search/Amjad/Code/resumes_data.csv'
+    df_resume = pd.read_csv(url)  #2484
+    # Clean Null description
+    df_resume.dropna(subset=['Resume'], inplace=True)  # 2483
+    df_resume = df_resume.drop_duplicates(subset=['Resume']) # 2481
+    return df_resume # Keep df_resume (for analysis/application later)
+
+def prep_zone_model_test_resume(data):
+    '''Create test data same as training data (Preprocessing, tokenize)'''
+    data = data.remove_columns(['Unnamed: 0'])
+    data.set_format('pandas')
+    data = data['train'][:]
+    #data = data['train'][:50]  # Sample for test
+    data = Dataset.from_pandas(data)
+    return data
+
+def tokenize_resume(batch):
+    checkpoint = "cardiffnlp/twitter-roberta-base-emotion"  # Pretrained model
+    tokenizer = AutoTokenizer.from_pretrained(checkpoint)
+    tokenizer.model_max_len = 512
+    return tokenizer(batch["Resume"], truncation=True,max_length=512)
+
+def predict(model, test_loader, device):
+    model.eval()  # Set the model to evaluation mode
+    predictions = []
+    for batch in test_loader:
+        batch = {k: v.to(device) for k, v in batch.items()}
+        with torch.no_grad():
+            outputs = model(**batch)
+        logits = outputs.logits
+        prediction = torch.argmax(logits, dim=-1)
+        # Flatten prediction tensor before appending to the list (ex. 40 with 3 batches: 16,16,8)
+        prediction = prediction.view(-1)
+        predictions.append(prediction)
+        # predictions.extend(pred.tolist())  # Convert tensor to list and extend
+        # predictions = np.array(predictions)  # Convert list to numpy array
+    predictions = torch.cat(predictions) #Concatenate the list of tensors into one tensor
+    predictions = predictions.tolist()
+    return predictions
+#%%
+##################################################
+# Similarity base Job recommendation
+##################################################
+# 1. Semantic Search using Siamese-BERT Networks (Sentence-BERT)
+def Create_Embedding_corpus(df, corpus):
+    model = SentenceTransformer('bert-base-nli-mean-tokens')
+    sentences = df[corpus].tolist()
+    sentence_embeddings = model.encode(sentences)
+    print('Length BERT embedding vector:', len(sentence_embeddings[0]))
+    print('Sample BERT embedding vector:', sentence_embeddings[0])  # includes negative values
+    return sentence_embeddings
+
+
+# 2. Test: Perform Semantic Search on Resume description
+import random
+def get_random_resumes(df,category, num_samples):
+    # Choose samples in a category
+    df_category = df[df['Category'] == category]
+    # If the category is not empty, select random resumes
+    if not df_category.empty:
+        random_indices = random.sample(list(df_category.index), min(num_samples, len(df_category)))
+        queries = df_category.loc[random_indices, 'Resume']
+        return queries
+    else:
+        return "No resumes found for this category."
+
+def Get_Job_Recommendation_Semantic_Similarity(df, category, num_samples, number_recommends):
+    query = get_random_resumes(df, category, num_samples)  # Create N samples
+    print("Semantic Search Results")
+    # Find the closest N sentences of the corpus for each query sentence based on cosine similarity
+    model = SentenceTransformer('bert-base-nli-mean-tokens')  # Test
+    for idx, q in enumerate(query):
+        queries = [q]
+        query_embeddings = model.encode(queries)
+        # Calculate Semantic_Similarity between resume and job corpus
+        for query, query_embedding in zip(queries, query_embeddings):
+            distances = scipy.spatial.distance.cdist([query_embedding], sentence_embeddings, "cosine")[0]
+            results = zip(range(len(distances)), distances)
+            results = sorted(results, key=lambda x: x[1])
+
+            print("\n\n======================\n\n")
+            print(f'Query: {idx}')  # sample # of query, can change it to whole resume: query
+            print("\nTop 5 most recommendable Occupations:")
+            url = r'https://raw.githubusercontent.com/Amjad-Alt/job_search/Nammin-Woo/Data_cleaned/df_Occupation.csv'
+            df_job = pd.read_csv(url)
+
+            for idx, distance in results[0:number_recommends]:
+                print(df_job.loc[idx, 'Title'], "(Cosine Score: %.4f)" % (1 - distance))  # Title of Job
+#%%
 ##################################################
 # Load and Preprocessing ONET data
 ##################################################
@@ -22,6 +211,24 @@ def read(file):
     path = os.path.join(os.getcwd(), file)
     df = pd.read_csv(path, sep='\t')
     return df
+
+def create_zone_model_data():
+    # Load Preprocessed Job data and preprocess it for modeling
+    url = r'https://raw.githubusercontent.com/Amjad-Alt/job_search/Nammin-Woo/Data_cleaned/df_Occupation.csv'
+    df_job = pd.read_csv(url)
+    # Explore Target # ['O*NET-SOC Code',  'Description_Job', 'Job Zone']
+    # . 1~5, Nan (9%)
+    # : wide range of characteristics which do not fit into one of the detailed O*NET-SOC occupations.
+    print("Original")
+    print(df_job['Job Zone'].value_counts(normalize=True, dropna=False).sort_index())
+    # df_job[df_job['Job Zone'].isnull()==1].Title
+    df_job.dropna(subset=['Job Zone'], inplace=True)
+    # df_job['Job Zone'].isnull().sum()
+    print("After Cleansing NaN Label")
+    print(df_job['Job Zone'].value_counts(normalize=True, dropna=False).sort_index())
+    df_job.rename(columns={'Job Zone': 'label'}, inplace=True)
+    df_job = df_job[['Description_Job', 'label']]
+    return df_job
 
 def save_as_pickle(df, path, filename):
     df.to_pickle((os.path.join(path, filename)))
