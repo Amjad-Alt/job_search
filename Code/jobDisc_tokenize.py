@@ -13,7 +13,7 @@ def get_bert_embedding(text, tokenizer, model):
         text,
         add_special_tokens=True,
         # from previous cleaning script and addded 10 just for me :)
-        max_length=max_length_words+10,
+        max_length=512,
         padding='max_length',
         return_attention_mask=True,
         return_tensors='pt',
@@ -31,9 +31,10 @@ def get_bert_embedding(text, tokenizer, model):
     return embeddings
 # %%
 
-# We will process the first 10 rows for demonstration
 embeddings = df_occupation['processed_text'].apply(
     lambda x: get_bert_embedding(x, tokenizer, model))
 
-# Convert embeddings to a NumPy array if needed
-embeddings = torch.stack(list(embeddings)).numpy()
+# Convert embeddings to tensor
+#embeddings = torch.stack(list(embeddings)).numpy()
+
+# %%
