@@ -20,12 +20,12 @@ import pandas as pd
 #
 # ################################################
 
-def create_zone_model_data():
+def create_zone_model_data(url):
     ''''
     # Create data to make Classification Model (Ready to Load by Transformer)
     '''
     # Load current data (cleaned ONET JOB Corpus)
-    url = r'https://raw.githubusercontent.com/Amjad-Alt/job_search/Nammin-Woo/Data_cleaned/df_Occupation.csv'
+    #url = r'https://raw.githubusercontent.com/Amjad-Alt/job_search/Nammin-Woo/Data_cleaned/df_Occupation.csv'
     df_job = pd.read_csv(url)
     # Explore Target # ['O*NET-SOC Code',  'Description_Job', 'Job Zone']
     # . 1~5, Nan (9%)

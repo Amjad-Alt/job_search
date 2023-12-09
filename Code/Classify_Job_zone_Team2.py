@@ -2,8 +2,7 @@
 ### Project folder on the Cloud
 import os
 os.chdir(os.path.join('/home/ubuntu', 'Project'))
-#%%
-os.getcwd()
+
 #%%
 # Import
 import os
@@ -205,7 +204,7 @@ eval_dataloader = DataLoader(
 # Set Hyperparameters,
 num_epochs = 3
 num_training_steps = num_epochs * len(train_dataloader)
-lr=5e-5
+lr=5e-5  #0.00005
 ## Optimizer
 from transformers import AdamW,get_scheduler
 optimizer = AdamW(model.parameters(), lr=lr)
