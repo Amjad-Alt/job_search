@@ -6,10 +6,12 @@ import streamlit as st
 import pdfplumber
 import io
 from transformers import pipeline
-import nltk
-from nltk.corpus import stopwords
-from nltk.tokenize import word_tokenize
+from transformers import BertTokenizer
+import sys
+import streamlit as st
 
+st.write(f"Python version: {sys.version}")
+st.write(f"Python path: {sys.executable}")
 # Custom CSS to inject
 st.markdown("""
     <style>
@@ -56,20 +58,18 @@ if uploaded_file is not None:
     st.write('Contents of the uploaded PDF file:')
     st.text_area(" ", cleaned_text, height=300)
 
-# Load your model (Update this with your actual model loading code)
-# model = load('path/to/your/model.joblib')
 
-nltk.download('punkt')
-nltk.download('stopwords')
+tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
 
 def preprocess_text(text):
-    text = text.lower()
-    tokens = word_tokenize(text)
-    stop_words = set(stopwords.words('english'))
-    filtered_tokens = [word for word in tokens if word not in stop_words]
+    encoded_input = tokenizer(
+        text, return_tensors='pt', max_length=512, truncation=True, padding='max_length')
 
-    return " ".join(filtered_tokens)
+    return encoded_input
+
+# Load your model (Update this with your actual model loading code)
+# model = load('path/to/your/model.joblib')
 
 
 def predict_job_level(text):
