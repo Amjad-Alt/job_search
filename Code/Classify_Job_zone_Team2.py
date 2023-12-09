@@ -56,6 +56,9 @@ url = r'https://raw.githubusercontent.com/Amjad-Alt/job_search/Amjad/Code/resume
 df_resume = pd.read_csv(url)
 #init_chk_df_2(df_resume)  #['ID', 'Resume', 'Category']
 
+# 2. Resume (New) with jobzone (1. Use Github(URL))
+url = r'https://raw.githubusercontent.com/Amjad-Alt/job_search/main/Data_cleaned/resumes_data_zone_pred.csv'
+df_resume = pd.read_csv(url)
 # 2.Use Cloud directory)
 # path = '/home/ubuntu/Project/Data_cleaned'
 # df_job = pd.read_pickle(os.path.join(path, 'df_Occupation.pkl'))
@@ -64,9 +67,9 @@ df_resume = pd.read_csv(url)
 
 #%%
 # Definition of Job zone
-# df_Job_Zone_Ref = read(os.path.join('/home/ubuntu/Project/db_28_0_text/','Job Zone Reference.txt'))
-# # ['Job Zone', 'Name', 'Experience', 'Education', 'Job Training', 'Examples', 'SVP Range']
-# print(df_Job_Zone_Ref[['Job Zone', 'Name']].to_string()) # Job zone 1~5 (easy ~ difficult)
+df_Job_Zone_Ref = read(os.path.join('/home/ubuntu/Project/db_28_0_text/','Job Zone Reference.txt'))
+# ['Job Zone', 'Name', 'Experience', 'Education', 'Job Training', 'Examples', 'SVP Range']
+print(df_Job_Zone_Ref[['Job Zone', 'Name']].to_string()) # Job zone 1~5 (easy ~ difficult)
 
 #%%
 ################################################
@@ -134,6 +137,8 @@ data = train_test_split(data,0.3)
 #%%
 # Define pretrained model
 checkpoint = "cardiffnlp/twitter-roberta-base-emotion"
+# Change base model : BERT, Another
+# -> We should change preprocessing.
 tokenizer = AutoTokenizer.from_pretrained(checkpoint)
 tokenizer.model_max_len=512
 #%%
@@ -160,8 +165,7 @@ class CustomModel(nn.Module):
 
         # Load Model with given checkpoint and extract its body
         self.model = model = AutoModel.from_pretrained(checkpoint, config=AutoConfig.from_pretrained(checkpoint,
-                                                                                                     output_attentions=True,
-                                                                                                        output_hidden_states=True))
+                                                                                                     output_attentions=True,                                                                                            output_hidden_states=True))
         #The Dropout layer: used to prevent overfitting
         self.dropout = nn.Dropout(0.1)  # 10%: set to zero when training
         self.classifier = nn.Linear(768, num_labels)  # load and initialize weights
@@ -208,7 +212,7 @@ eval_dataloader = DataLoader(
 # Set Hyperparameters,
 num_epochs = 3
 num_training_steps = num_epochs * len(train_dataloader)
-lr=5e-5
+lr=5e-5  #0.00005
 ## Optimizer
 from transformers import AdamW,get_scheduler
 optimizer = AdamW(model.parameters(), lr=lr)

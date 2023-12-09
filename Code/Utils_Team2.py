@@ -20,12 +20,12 @@ import pandas as pd
 #
 # ################################################
 
-def create_zone_model_data():
+def create_zone_model_data(url):
     ''''
     # Create data to make Classification Model (Ready to Load by Transformer)
     '''
     # Load current data (cleaned ONET JOB Corpus)
-    url = r'https://raw.githubusercontent.com/Amjad-Alt/job_search/Nammin-Woo/Data_cleaned/df_Occupation.csv'
+    #url = r'https://raw.githubusercontent.com/Amjad-Alt/job_search/Nammin-Woo/Data_cleaned/df_Occupation.csv'
     df_job = pd.read_csv(url)
     # Explore Target # ['O*NET-SOC Code',  'Description_Job', 'Job Zone']
     # . 1~5, Nan (9%)
@@ -212,9 +212,8 @@ def read(file):
     df = pd.read_csv(path, sep='\t')
     return df
 
-def create_zone_model_data():
+def create_zone_model_data(url):
     # Load Preprocessed Job data and preprocess it for modeling
-    url = r'https://raw.githubusercontent.com/Amjad-Alt/job_search/Nammin-Woo/Data_cleaned/df_Occupation.csv'
     df_job = pd.read_csv(url)
     # Explore Target # ['O*NET-SOC Code',  'Description_Job', 'Job Zone']
     # . 1~5, Nan (9%)
@@ -314,7 +313,7 @@ def job_corpus(df, idx):
         sort_rule = ['O*NET-SOC Code', 'Value_ratio', 'Element ID']
         ele_col = ['Element Name', 'Description_Ele']
         df = df.sort_values(sort_rule, ascending=[True, False, True])
-        df = df.groupby(job_col).head(3) #leave the top 3 elements by each Job code
+        df = df.groupby(job_col).head(5) #leave the top 3 > 5elements by each Job code
         # 3. Merge 'Description_Ele' of 3 elements into 'Description_top_ele'
         df['Description_top_ele'] = df.groupby(job_col)['Description_Ele'].transform(lambda x: ' '.join(x))
 
