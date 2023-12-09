@@ -1,4 +1,8 @@
 
+import torch
+import pandas as pd
+from transformers import BertTokenizer, BertModel
+import pickle
 #recommed a job title from job discription based on similarty with resume 
 # Load your job descriptions dataset
 url = r'https://raw.githubusercontent.com/Amjad-Alt/job_search/Nammin-Woo/Data_cleaned/df_Occupation.csv'
@@ -15,7 +19,6 @@ df['combined_text'].fillna('NA', inplace=True)
 # Creating a new DataFrame with only the relevant columns
 job_df = df[['Title', 'combined_text']]
 
-
 # Load pre-trained model tokenizer and model
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 model = BertModel.from_pretrained('bert-base-uncased')
@@ -29,8 +32,6 @@ def encode_text(text):
     with torch.no_grad():
         outputs = model(input_ids)
     return outputs[0][0].mean(dim=0).numpy()  # Mean pooling
-
-import pickle
 
 # Preprocess and save job encodings
 job_encodings = {}
