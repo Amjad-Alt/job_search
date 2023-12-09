@@ -225,27 +225,28 @@ def main():
     df = read('Abilities.txt') # read
     df = join_key(df)  # join columns
     init_chk_df_3(df)  #check features
-    df_Abilities = df
+    globals()['df_Abilities'] = df
 
     df = read('Interests.txt')
     df = join_key(df)
     init_chk_df_3(df)  #check features
-    df_Interests = df
+    globals()['df_Interests'] = df
 
     df = read('Knowledge.txt')
     df = join_key(df)
     init_chk_df_3(df)
-    df_Knowledge = df
+    globals()['df_Knowledge'] = df
 
     df = read('Skills.txt')
     df = join_key(df)
     init_chk_df_3(df)
-    df_Skills = df
+    globals()['df_Skills'] = df
 
     df = read('Technology Skills.txt')
     # Different data structure (Only joined Job description)
     df = pd.merge(df, read('Occupation Data.txt'), how='left', on='O*NET-SOC Code')
-    df_Tech_Skills = df
+    globals()['df_Tech_Skills'] = df
+    return
 #%%
 if __name__ == "__main__":
     main()
@@ -309,10 +310,11 @@ for idx,i in enumerate(datasets):
 #%%
 df = df.fillna('')   # concatenate of NaN value with strings results in a NaN (So need to convert into blank)
 # Make Full_Job_Description corpus Column
-df['Description_Job'] = df['Description'] + ' ' + df['Description_Abilities'] \
+df['Description_Job'] = df['Title'] + ' ' + df['Description'] + ' ' + df['Description_Abilities'] \
                         + ' ' + df['Description_Knowledge'] + ' ' + df['Description_Skills'] \
                         + ' ' + df['Description_Tech'] + ' ' + df['Description_Interests']
-
+#%%
+#df.columns.to_list()
 #%%
 # # Final: Sample Check
 # title = 'Statisticians'  #Dentists, General
@@ -320,11 +322,18 @@ df['Description_Job'] = df['Description'] + ' ' + df['Description_Abilities'] \
 # print(df[filter][ ['Title', 'Description_Job']].to_string())
 # print(len(df[filter]['Description_Job'].values[0])) #Length: 3343
 #%%
+# df_Occupation_v2(12/9): Top 5 elements(function job_corpus), Add Job Title ahead
+#save_as_pickle(df, '/home/ubuntu/Project/Data_cleaned', 'df_Occupation_v2.pkl') # Check Point
+#%%
+#df.to_csv("./df_Occupation_v2.csv")
+
+#%%
 #save_as_pickle(df, '/home/ubuntu/Project/Data_cleaned', 'df_Occupation.pkl') # Check Point
 #%%
-path = '/home/ubuntu/Project/Data_cleaned'
-df_job = pd.read_pickle(os.path.join(path, 'df_Occupation.pkl'))
-print(df_job.shape)
+# path = '/home/ubuntu/Project/Data_cleaned'
+# df_job = pd.read_pickle(os.path.join(path, 'df_Occupation.pkl')) #df_Occupation_v2
+# print(df_job.shape)
+
 
 #%%
 # df_resume = pd.read_pickle(os.path.join(path, 'resume_data_cleaned.pkl'))

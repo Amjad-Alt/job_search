@@ -40,12 +40,21 @@ combined_df.drop('key', axis=1, inplace=True) # Drop the key as it's no longer n
 combined_df.columns = ['Title', 'Description_Job', 'Category', 'Resume']
 #%%
 combined_df.shape  #(2523744, 4)
+#%%
+
+# GET COS Similarity (apply custom model to get the label)
+
 
 #%%
 # Define a threshold for similarity
-threshold = 0.7
+threshold = 0.7  # Similar, or not
 # Assign label based on similarity
 label = 1 if similarity.item() > threshold else 0
 print(f"Label: {label}")
 # Cosine Similarity: 0.9502490758895874
 # Label: 1
+
+#%%
+# Train Custom model [ NN ]
+# Predict Similarity label
+

@@ -314,7 +314,7 @@ def job_corpus(df, idx):
         sort_rule = ['O*NET-SOC Code', 'Value_ratio', 'Element ID']
         ele_col = ['Element Name', 'Description_Ele']
         df = df.sort_values(sort_rule, ascending=[True, False, True])
-        df = df.groupby(job_col).head(3) #leave the top 3 elements by each Job code
+        df = df.groupby(job_col).head(5) #leave the top 3 > 5elements by each Job code
         # 3. Merge 'Description_Ele' of 3 elements into 'Description_top_ele'
         df['Description_top_ele'] = df.groupby(job_col)['Description_Ele'].transform(lambda x: ' '.join(x))
 
