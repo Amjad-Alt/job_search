@@ -44,7 +44,15 @@ from sentence_transformers import SentenceTransformer
 import scipy.spatial
 import sys
 sys.path.insert(0, os.getcwd())
-from Utils_Team2 import *  # Call functions as Utils
+# Add the directory containing Utils_Team2.py to sys.path
+sys.path.append('/home/ubuntu/job_search/Code/')
+
+
+# Change the current working directory
+os.chdir('/home/ubuntu/job_search/Code/')
+
+# Import custom utility functions
+from Utils_Team2 import *# Call functions as Utils
 #os.listdir(os.getcwd())
 
 #%%
@@ -84,22 +92,24 @@ df_resume = pd.read_csv(url)
 # https://github.com/UKPLab/sentence-transformers/blob/master/docs/pretrained-models/sts-models.md
 # code adapted from https://github.com/UKPLab/sentence-transformers/blob/master/examples/application_semantic_search.py
 #%%
+# Function to create embeddings
 def Create_Embedding_corpus(df, corpus):
     model = SentenceTransformer('bert-base-nli-mean-tokens')
     sentences = df[corpus].tolist()
     sentence_embeddings = model.encode(sentences)
     print('Length BERT embedding vector:', len(sentence_embeddings[0]))
-    print('Sample BERT embedding vector:', sentence_embeddings[0])  # includes negative values
+    print('Sample BERT embedding vector:', sentence_embeddings[0])
     return sentence_embeddings
-#%%
-################################################
-# 1. Setup an Embedding of Job description Corpus
-################################################
+
+# Create embeddings for job descriptions
 Job_corpus_embeddings = Create_Embedding_corpus(df_job, 'Description_Job')
-#%%
-# np.save('Job_corpus_embeddings.npy', sentence_embeddings) # Save to a .npy file
-# Load saved result
-sentence_embeddings = np.load('Job_sentence_embeddings.npy')
+
+# Save the embeddings to a .npy file
+np.save('Job_corpus_embeddings.npy', Job_corpus_embeddings)
+
+# Load the saved embeddings
+loaded_embeddings = np.load('Job_corpus_embeddings.npy')
+
 #%%
 ################################################
 # 2. Test: Perform Semantic Search on Resume description

@@ -9,24 +9,10 @@
           </mappings>
         </serverdata>
       </paths>
-      <paths name="ubuntu@3.219.247.125:22 key">
+      <paths name="ubuntu@54.84.68.219:22 key">
         <serverdata>
           <mappings>
             <mapping deploy="/home/ubuntu/job_search" local="$PROJECT_DIR$" />
-          </mappings>
-        </serverdata>
-      </paths>
-      <paths name="ubuntu@3.219.247.125:22 key (2)">
-        <serverdata>
-          <mappings>
-            <mapping deploy="/home/ubuntu/job_search" local="$PROJECT_DIR$" />
-          </mappings>
-        </serverdata>
-      </paths>
-      <paths name="ubuntu@3.91.198.210:22 key">
-        <serverdata>
-          <mappings>
-            <mapping local="$PROJECT_DIR$" web="/" />
           </mappings>
         </serverdata>
       </paths>
