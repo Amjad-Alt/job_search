@@ -1,24 +1,33 @@
-
-### Project folder on the Cloud
-import os
-os.chdir(os.path.join('/home/ubuntu', 'Project'))
 #%%
-# Import
+# Standard library imports
 import os
-import pandas as pd
 import sys
+
+# Modify sys.path to include necessary directories
 sys.path.insert(0, os.getcwd())
-from Utils_Team2 import *  # Call functions as Utils
-#os.listdir(os.getcwd())
-from datasets import load_dataset,Dataset,DatasetDict
-from transformers import DataCollatorForLanguageModeling
-from transformers import DataCollatorWithPadding,AutoModelForSequenceClassification, Trainer, TrainingArguments,AutoTokenizer,AutoModel,AutoConfig
-from transformers.modeling_outputs import TokenClassifierOutput
+sys.path.append('/home/ubuntu/job_search/Code/')
+
+# Change the current working directory
+os.chdir('/home/ubuntu/job_search/Code/')
+
+# Import custom utility functions from Utils_Team2
+from Utils_Team2 import *
+
+# Third-party imports for data handling and machine learning
+import pandas as pd
+import numpy as np
 import torch
 import torch.nn as nn
-import pandas as pd
 from torch.utils.data import DataLoader
-import numpy as np
+
+# Huggingface's transformers and datasets library
+from transformers import (AutoModel, AutoModelForSequenceClassification, AutoConfig, AutoTokenizer,
+                          DataCollatorForLanguageModeling, DataCollatorWithPadding)
+from transformers.modeling_outputs import TokenClassifierOutput
+
+from datasets import load_dataset, Dataset, DatasetDict
+
+
 #%%
 ################################################
 # [Classification] Model to Predict Job zone (with Job Corpus)
@@ -259,8 +268,8 @@ for epoch in range(num_epochs):
 # Save Pytorch Model
 # Model 1 : {'accuracy': 0.6137184115523465}
 model_path = "./Model_Classify_Job_zone.pt"  # specify the path to save the model
-#torch.save(model.state_dict(), model_path)
-#model.load_state_dict(torch.load(model_path))
+torch.save(model.state_dict(), model_path)
+model.load_state_dict(torch.load(model_path))
 
 #%%
 ################################################
@@ -341,8 +350,8 @@ results_ = [x + 1 for x in results]
 #%%
 print(len(results)) #2481
 #%%
-#np.save('zone_model_test_resume.npy', results) # array save (Bult results on Resume data)
-#results = np.load('zone_model_test_resume.npy')
+np.save('zone_model_test_resume.npy', results) # array save (Bult results on Resume data)
+results = np.load('zone_model_test_resume.npy')
 #%%
 # Freq
 from collections import Counter
@@ -369,3 +378,4 @@ df_resume.tail()
 #%%
 # save_as_pickle(df_resume, '/home/ubuntu/Project/Data_cleaned', 'df_New_resume_job_zone_pred.pkl') # Check Point
 # df_resume.to_csv("./resumes_data_zone_pred.csv")
+

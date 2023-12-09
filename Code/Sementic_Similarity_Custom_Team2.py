@@ -48,4 +48,4 @@ threshold = 0.7
 label = 1 if similarity.item() > threshold else 0
 print(f"Label: {label}")
 # Cosine Similarity: 0.9502490758895874
-# Label: 1
+# Label: 1
