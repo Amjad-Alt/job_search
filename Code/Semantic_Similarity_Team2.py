@@ -38,6 +38,10 @@ print(f"Current working directory: {os.getcwd()}")
 # Import
 import os
 import pandas as pd
+import numpy as np
+import random
+from sentence_transformers import SentenceTransformer
+import scipy.spatial
 import sys
 sys.path.insert(0, os.getcwd())
 from Utils_Team2 import *  # Call functions as Utils
@@ -47,26 +51,20 @@ from Utils_Team2 import *  # Call functions as Utils
 ################################################
 # Load file (Option 1. Use Github(URL), 2. Use Cloud directory,
 ################################################
-# 1. Job (Pickle, 2. Use Cloud directory)
-path = '/home/ubuntu/Project/Data_cleaned'
-df_job = pd.read_pickle(os.path.join(path, 'df_Occupation.pkl'))
-print(df_job.shape)
-
-# 2. Resume_previous one (2. Use Cloud directory)
-df_resume = pd.read_pickle(os.path.join(path, 'resume_data_cleaned.pkl'))
-print(df_resume.shape)
-
-#%%
 # 1. Job (CSV 1. Use Github(URL))
 url = r'https://raw.githubusercontent.com/Amjad-Alt/job_search/Nammin-Woo/Data_cleaned/df_Occupation.csv'
 df_job = pd.read_csv(url)
 
-# 2. Resume Update (1. Use Github(URL))
+# 2. Resume (New) (1. Use Github(URL))
 url = r'https://raw.githubusercontent.com/Amjad-Alt/job_search/Amjad/Code/resumes_data.csv'
 df_resume = pd.read_csv(url)
+#init_chk_df_2(df_resume)  #['ID', 'Resume', 'Category']
 
-init_chk_df_2(df_resume)  #['ID', 'Resume', 'Category']
-df_resume = df_resume[['Category', 'Resume']]
+# 2.Use Cloud directory)
+# path = '/home/ubuntu/Project/Data_cleaned'
+# df_job = pd.read_pickle(os.path.join(path, 'df_Occupation.pkl'))
+# Old resume
+# df_resume = pd.read_pickle(os.path.join(path, 'resume_data_cleaned.pkl'))
 #%%
 ###############################################################################
 # 1. Semantic Search using Siamese-BERT Networks (Sentence-BERT)
@@ -85,35 +83,32 @@ df_resume = df_resume[['Category', 'Resume']]
 # Semantic Textual Similarity are available
 # https://github.com/UKPLab/sentence-transformers/blob/master/docs/pretrained-models/sts-models.md
 # code adapted from https://github.com/UKPLab/sentence-transformers/blob/master/examples/application_semantic_search.py
-
-from sentence_transformers import SentenceTransformer
-import scipy.spatial
-
 #%%
+def Create_Embedding_corpus(df, corpus):
+    model = SentenceTransformer('bert-base-nli-mean-tokens')
+    sentences = df[corpus].tolist()
+    sentence_embeddings = model.encode(sentences)
+    print('Length BERT embedding vector:', len(sentence_embeddings[0]))
+    print('Sample BERT embedding vector:', sentence_embeddings[0])  # includes negative values
+    return sentence_embeddings
+#%%
+################################################
 # 1. Setup an Embedding of Job description Corpus
-
-#sentences = ['Absence of sanity','Lack of saneness','A man is eating food.']
-sentences = df_job['Description_Job'].tolist()  #['Title','Description_Job']
-# Each sentence is encoded as a 1-D vector with 78 columns
-model = SentenceTransformer('bert-base-nli-mean-tokens')  # Test
-
-sentence_embeddings = model.encode(sentences)
-print('Sample BERT embedding vector - length', len(sentence_embeddings[0]))
-print('Sample BERT embedding vector' , sentence_embeddings[0]) #- note includes negative values'
+################################################
+Job_corpus_embeddings = Create_Embedding_corpus(df_job, 'Description_Job')
 #%%
-
-model = SentenceTransformer('bert-base-nli-mean-tokens')  # Test
-import numpy as np
-# np.save('Job_sentence_embeddings.npy', sentence_embeddings) # Save to a .npy file
+# np.save('Job_corpus_embeddings.npy', sentence_embeddings) # Save to a .npy file
+# Load saved result
 sentence_embeddings = np.load('Job_sentence_embeddings.npy')
-
 #%%
+################################################
 # 2. Test: Perform Semantic Search on Resume description
+################################################
+#%%
 import random
-def get_random_resumes(category, num_samples):
+def get_random_resumes(df,category, num_samples):
     # Choose samples in a category
-    df_category = df_resume[df_resume['Category'] == category]
-
+    df_category = df[df['Category'] == category]
     # If the category is not empty, select random resumes
     if not df_category.empty:
         random_indices = random.sample(list(df_category.index), min(num_samples, len(df_category)))
@@ -121,34 +116,31 @@ def get_random_resumes(category, num_samples):
         return queries
     else:
         return "No resumes found for this category."
+
+def Get_Job_Recommendation_Semantic_Similarity(df, category, num_samples, number_recommends):
+    query = get_random_resumes(df, category, num_samples)  # Create N samples
+    print("Semantic Search Results")
+    # Find the closest N sentences of the corpus for each query sentence based on cosine similarity
+    model = SentenceTransformer('bert-base-nli-mean-tokens')  # Test
+    for idx, q in enumerate(query):
+        queries = [q]
+        query_embeddings = model.encode(queries)
+        # Calculate Semantic_Similarity between resume and job corpus
+        for query, query_embedding in zip(queries, query_embeddings):
+            distances = scipy.spatial.distance.cdist([query_embedding], sentence_embeddings, "cosine")[0]
+            results = zip(range(len(distances)), distances)
+            results = sorted(results, key=lambda x: x[1])
+
+            print("\n\n======================\n\n")
+            print(f'Query: {idx}')  # sample # of query, can change it to whole resume: query
+            print("\nTop 5 most recommendable Occupations:")
+            url = r'https://raw.githubusercontent.com/Amjad-Alt/job_search/Nammin-Woo/Data_cleaned/df_Occupation.csv'
+            df_job = pd.read_csv(url)
+
+            for idx, distance in results[0:number_recommends]:
+                print(df_job.loc[idx, 'Title'], "(Cosine Score: %.4f)" % (1 - distance))  # Title of Job
 #%%
-#df_resume['Category'].value_counts()
 df_resume['Category'].value_counts()
 #%%
-# Get Resume samples
-query = get_random_resumes('SALES', 3)
-#%%
-query
-#%%
-# Parameter : Number of Jobs to recommend
-number_top_matches = 5
-#query = df_resume['Resume'].iloc[0]  # sample result
-print("Semantic Search Results")
-# Find the closest N sentences of the corpus for each query sentence based on cosine similarity
-for idx,q in enumerate(query):
-    queries = [q]
-    query_embeddings = model.encode(queries)
-
-    for query, query_embedding in zip(queries, query_embeddings):
-        distances = scipy.spatial.distance.cdist([query_embedding], sentence_embeddings, "cosine")[0]
-
-        results = zip(range(len(distances)), distances)
-        results = sorted(results, key=lambda x: x[1])
-
-        print("\n\n======================\n\n")
-        print(f'Query: {idx}') #query
-        print("\nTop 5 most recommendable Occupations:")
-
-        for idx, distance in results[0:number_top_matches]:
-            print(df_job.loc[idx, 'Title'], "(Cosine Score: %.4f)" % (1 - distance))  # Title of Job
-    #        print(df_job[idx].strip(), "(Cosine Score: %.4f)" % (1-distance))  # Job Description
+# Example: 3 sample Resumes on 'SALES' Category, Recommend 5 job
+Get_Job_Recommendation_Semantic_Similarity(df_resume, 'SALES', 3, 5)
