@@ -212,9 +212,8 @@ def read(file):
     df = pd.read_csv(path, sep='\t')
     return df
 
-def create_zone_model_data():
+def create_zone_model_data(url):
     # Load Preprocessed Job data and preprocess it for modeling
-    url = r'https://raw.githubusercontent.com/Amjad-Alt/job_search/Nammin-Woo/Data_cleaned/df_Occupation.csv'
     df_job = pd.read_csv(url)
     # Explore Target # ['O*NET-SOC Code',  'Description_Job', 'Job Zone']
     # . 1~5, Nan (9%)

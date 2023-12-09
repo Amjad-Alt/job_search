@@ -1,4 +1,7 @@
 #%%
+# import os
+# os.chdir(os.path.join('/home/ubuntu', 'Project'))
+#%%
 # Import
 import os
 import pandas as pd
@@ -10,11 +13,18 @@ from transformers import BertTokenizer, BertForSequenceClassification
 from transformers import Trainer, TrainingArguments
 from torch.utils.data import DataLoader
 #%%
+url = r'https://raw.githubusercontent.com/Amjad-Alt/job_search/Nammin-Woo/Data_cleaned/df_Occupation_v2.csv'
+temp = pd.read_csv(url)
+#%%
+temp.columns.to_list()
+#%%
+url = r'https://raw.githubusercontent.com/Amjad-Alt/job_search/Nammin-Woo/Data_cleaned/df_Occupation_v2.csv'
+temp = create_zone_model_data(url)
+#%%
+temp.head()
+#%%
 # Create data from a scratch
-
-df_job = pd.read_pickle(os.path.join('/home/ubuntu/Project/Data_cleaned', 'df_Occupation_v2.pkl'))
-
-
+#df_job = pd.read_pickle(os.path.join('/home/ubuntu/Project/Data_cleaned', 'df_Occupation_v2.pkl'))
 create_zone_model_data().to_csv("./job_zone_model_data.csv") # to_csv, for load_dataset()
 data=load_dataset("csv",data_files="./job_zone_model_data.csv") #Transformer format: DatasetDict
 data = prep_zone_model_train_data(data) #923, train:

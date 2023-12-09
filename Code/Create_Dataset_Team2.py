@@ -293,7 +293,10 @@ for idx,i in enumerate(datasets):
 raw_onet_dir = "/home/ubuntu/Project/db_28_0_text/"
 path = os.path.join(raw_onet_dir,'Occupation Data.txt')
 df = read(path)
-#init_chk_df_2(df)
+# Ref.Datasets
+df_Job_Zone = read(os.path.join(raw_onet_dir,'Job Zones.txt'))
+df_Job_Zone_Ref = read(os.path.join(raw_onet_dir,'Job Zone Reference.txt'))
+df_relat_Jobs = read(os.path.join(raw_onet_dir,'Related Occupations.txt'))
 #%%
 # Join 6 Corpus datasets To the Occupation dataset
 datasets = [df_Abilities, df_Knowledge, df_Skills, df_Tech_Skills, df_Interests]
@@ -314,18 +317,24 @@ df['Description_Job'] = df['Title'] + ' ' + df['Description'] + ' ' + df['Descri
                         + ' ' + df['Description_Knowledge'] + ' ' + df['Description_Skills'] \
                         + ' ' + df['Description_Tech'] + ' ' + df['Description_Interests']
 #%%
+# Add job zone column to Job data
+print(df.shape)
+df = pd.merge(df, df_Job_Zone[['O*NET-SOC Code','Job Zone']], how='left', on='O*NET-SOC Code')
+print(df.shape)
+#%%
 #df.columns.to_list()
+
+#%%
+# df_Occupation_v2(12/9): Top 5 elements(function job_corpus), Add Job Title ahead
+# save_as_pickle(df, '/home/ubuntu/Project/Data_cleaned', 'df_Occupation_v2.pkl') # Check Point
+# df.to_csv("/home/ubuntu/Project/Data_cleaned/df_Occupation_v2.csv")
 #%%
 # # Final: Sample Check
 # title = 'Statisticians'  #Dentists, General
 # filter = (df['Title'] == title)
 # print(df[filter][ ['Title', 'Description_Job']].to_string())
 # print(len(df[filter]['Description_Job'].values[0])) #Length: 3343
-#%%
-# df_Occupation_v2(12/9): Top 5 elements(function job_corpus), Add Job Title ahead
-#save_as_pickle(df, '/home/ubuntu/Project/Data_cleaned', 'df_Occupation_v2.pkl') # Check Point
-#%%
-#df.to_csv("./df_Occupation_v2.csv")
+
 
 #%%
 #save_as_pickle(df, '/home/ubuntu/Project/Data_cleaned', 'df_Occupation.pkl') # Check Point
@@ -344,12 +353,12 @@ df['Description_Job'] = df['Title'] + ' ' + df['Description'] + ' ' + df['Descri
 # 1. add Job_zone (for classification model)
 # 2. prepare ref.data sets for inference(streamlit): Job zone, Related Jobs, Work sets
 
-#%%
-# Ref.Datasets
-raw_onet_dir = "/home/ubuntu/Project/db_28_0_text/"
-df_Job_Zone = read(os.path.join(raw_onet_dir,'Job Zones.txt'))
-df_Job_Zone_Ref = read(os.path.join(raw_onet_dir,'Job Zone Reference.txt'))
-df_relat_Jobs = read(os.path.join(raw_onet_dir,'Related Occupations.txt'))
+# #%%
+# # Ref.Datasets
+# raw_onet_dir = "/home/ubuntu/Project/db_28_0_text/"
+# df_Job_Zone = read(os.path.join(raw_onet_dir,'Job Zones.txt'))
+# df_Job_Zone_Ref = read(os.path.join(raw_onet_dir,'Job Zone Reference.txt'))
+# df_relat_Jobs = read(os.path.join(raw_onet_dir,'Related Occupations.txt'))
 #%%
 # save_as_pickle(df_Job_Zone, '/home/ubuntu/Project/Data_cleaned/JOB_ONET_data_pkl', 'df_Job_Zone.pkl')
 # save_as_pickle(df_Job_Zone_Ref, '/home/ubuntu/Project/Data_cleaned/JOB_ONET_data_pkl', 'df_Job_Zone_Ref.pkl')
@@ -357,11 +366,11 @@ df_relat_Jobs = read(os.path.join(raw_onet_dir,'Related Occupations.txt'))
 
 #%%
 # Add job zone
-print(df_job.shape)
-df_job = pd.merge(df_job, df_Job_Zone[['O*NET-SOC Code','Job Zone']], how='left', on='O*NET-SOC Code')
-print(df_job.shape)
-#%%
-os.getcwd()
+# print(df_job.shape)
+# df_job = pd.merge(df_job, df_Job_Zone[['O*NET-SOC Code','Job Zone']], how='left', on='O*NET-SOC Code')
+# print(df_job.shape)
+# #%%
+# os.getcwd()
 #%%
 #save_as_pickle(df_job, '/home/ubuntu/Project/Data_cleaned', 'df_Occupation.pkl') # Check Point
 #df_job.to_csv("./df_Occupation.csv")
