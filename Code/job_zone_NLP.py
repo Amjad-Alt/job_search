@@ -1,4 +1,3 @@
-
 from Utils_Team2 import *
 import os
 import sys
@@ -15,8 +14,10 @@ from tqdm.auto import tqdm
 from sklearn.metrics import accuracy_score
 sys.path.insert(0, os.getcwd())
 
-# Load and preprocess data
 
+
+
+# Load and preprocess data
 
 def create_zone_model_data():
     url = 'https://raw.githubusercontent.com/Amjad-Alt/job_search/Nammin-Woo/Data_cleaned/df_Occupation.csv'
@@ -41,9 +42,8 @@ df_job.to_csv("./job_zone_model_data.csv")
 # Load dataset
 data = load_dataset("csv", data_files="./job_zone_model_data.csv")
 
+
 # Preprocess dataset
-
-
 def preprocess_data(data):
     '''Preprocessing of Transformer data'''
     # Convert the train dataset to a Pandas DataFrame
@@ -74,9 +74,8 @@ tokenized_dataset = data.map(tokenize, batched=True)
 tokenized_dataset.set_format(
     "torch", columns=["input_ids", "attention_mask", "label"])
 
+
 # Define Classifier
-
-
 class Classifier(nn.Module):
     def __init__(self, pretrained_model, num_labels):
         super(Classifier, self).__init__()
@@ -91,7 +90,7 @@ class Classifier(nn.Module):
 
 
 # Model setup
-num_labels = 6
+num_labels = 5
 model = Classifier(AutoModel.from_pretrained(checkpoint, config=AutoConfig.from_pretrained(
     checkpoint)), num_labels).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
 
@@ -112,8 +111,6 @@ lr_scheduler = get_scheduler("linear", optimizer=optimizer, num_warmup_steps=0,
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Function to train and evaluate model
-
-
 def train_and_evaluate(model, train_dataloader, eval_dataloader, optimizer, lr_scheduler, device, num_epochs):
     # Training loop
     model.train()
@@ -154,7 +151,7 @@ def train_and_evaluate(model, train_dataloader, eval_dataloader, optimizer, lr_s
 
 # Hyperparameters for grid search
 learning_rates = [1e-5, 3e-5, 5e-5]
-batch_sizes = [8, 16, 32]
+batch_sizes = [8, 16]
 num_epochs_options = [3, 4]
 
 # Grid search
