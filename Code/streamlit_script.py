@@ -61,22 +61,47 @@ def read_and_preprocess_for_job_level(file):
 
 # Define the function to preprocess text and make predictions for job level
 
+
 def predict_job_level(text, model, tokenizer):
     # Tokenize the input text
-    encoded_input = tokenizer(text, return_tensors='pt', max_length=512, truncation=True, padding='max_length')
+    encoded_input = tokenizer(
+        text, return_tensors='pt', max_length=512, truncation=True, padding='max_length')
     input_ids = encoded_input['input_ids']
     attention_mask = encoded_input['attention_mask']
 
     # Run the model to get predictions
     with torch.no_grad():
         outputs = model(input_ids=input_ids, attention_mask=attention_mask)
-    
+
     # Get the predicted class (job level)
     prediction = torch.argmax(outputs, dim=-1).item()
     return prediction
 
 
-# Process uploaded file for job level prediction when the button is clicked
+def get_job_level_info(prediction):
+    job_level_info = {
+        0: ("Intern", "Little or no previous work-related skill, knowledge, or experience is needed for these occupations. "
+                      "For example, a person can become a waiter or waitress even if he/she has never worked before."),
+        1: ("Entry Level", "Some previous work-related skill, knowledge, or experience is usually needed. For example, a teller "
+                           "would benefit from experience working directly with the public."),
+        2: ("Junior", "Previous work-related skill, knowledge, or experience is required for these occupations. For example, "
+                      "an electrician must have completed three or four years of apprenticeship or several years of vocational "
+                      "training, and often must have passed a licensing exam, in order to perform the job."),
+        3: ("Mid Level", "A considerable amount of work-related skill, knowledge, or experience is needed for these occupations. "
+                         "For example, an accountant must complete four years of college and work for several years in accounting "
+                         "to be considered qualified."),
+        4: ("Senior", "Extensive skill, knowledge, and experience are needed for these occupations. Many require more than five "
+                      "years of experience. For example, surgeons must complete four years of college and an additional five to "
+                      "seven years of specialized medical training to be able to do their job."),
+        5: ("Manager", "Extensive skill, knowledge, and experience are needed for these occupations. Many require more than five "
+            "years of experience. For example, surgeons must complete four years of college and an additional five to "
+            "seven years of specialized medical training to be able to do their job.")
+    }
+
+    # Return the corresponding job level information (title and description)
+    return job_level_info.get(prediction, ("Unknown Level", "No description available"))
+
+
 if uploaded_file is not None:
     resume_text_for_job_level = read_and_preprocess_for_job_level(
         io.BytesIO(uploaded_file.getvalue()))
@@ -86,8 +111,9 @@ if uploaded_file is not None:
     if st.button('Predict Job Level'):
         job_level = predict_job_level(
             resume_text_for_job_level, loaded_model, tokenizer_for_prediction)
-        st.write(f'Recommended Job Level to Apply For: {job_level}')
-
+        job_level_title, job_level_description = get_job_level_info(job_level)
+        st.write(f'**Recommended Job Level to Apply For:** {job_level_title}')
+        st.write(job_level_description)
 # Load tokenizer and model for job recommendations
 tokenizer_for_recommendation = AutoTokenizer.from_pretrained(
     'bert-base-uncased')
@@ -125,6 +151,6 @@ if uploaded_file is not None and st.button('Recommend Jobs'):
 
     # Display job recommendations
     recommended_jobs = sorted(scores, key=scores.get, reverse=True)[:5]
-    st.write("Top job recommendations based on your resume:")
+    st.write("**Top job recommendations based on your resume:**")
     for job in recommended_jobs:
         st.write(job)
