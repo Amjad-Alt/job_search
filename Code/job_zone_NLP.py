@@ -21,7 +21,7 @@ sys.path.insert(0, os.getcwd())
 
 # Load and preprocess data
 def create_zone_model_data():
-    url = 'https://raw.githubusercontent.com/Amjad-Alt/job_search/Nammin-Woo/Data_cleaned/df_Occupation.csv'
+    url = 'https://raw.githubusercontent.com/Amjad-Alt/job_search/Nammin-Woo/Data_cleaned/df_Occupation_v2.csv'
     df_job = pd.read_csv(url)
     df_job.dropna(subset=['Job Zone'], inplace=True)
 
@@ -91,7 +91,7 @@ class Classifier(nn.Module):
 
 
 # Model setup
-num_labels = 6
+num_labels = 5
 model = Classifier(AutoModel.from_pretrained(checkpoint, config=AutoConfig.from_pretrained(
     checkpoint)), num_labels).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
 
@@ -152,8 +152,8 @@ def train_and_evaluate(model, train_dataloader, eval_dataloader, optimizer, lr_s
 
 # Hyperparameters for grid search
 learning_rates = [1e-5, 3e-5, 5e-5]
-batch_sizes = [8, 16, 32]
-num_epochs_options = [3, 4]
+batch_sizes = [8,16]
+num_epochs_options = [3]
 
 # Grid search
 best_accuracy = 0
@@ -189,12 +189,12 @@ print(
     f"Best Hyperparameters: {best_hyperparameters}, Best Accuracy: {best_accuracy:.4f}")
 
 # Define the path to save the model
-# model_save_path = "./trained_model.pth"
+#model_save_path = "./trained_model2.pth"
 
 # Save the model's state dictionary
-# torch.save(model.state_dict(), model_save_path)
+#torch.save(model.state_dict(), model_save_path)
 
-best_model_path = "trained_model.pth"  # Update this with the actual path
+best_model_path = "trained_model2.pth"  # Update this with the actual path
 
 # Load the best model
 best_model = Classifier(AutoModel.from_pretrained(checkpoint, config=AutoConfig.from_pretrained(checkpoint)), num_labels)
