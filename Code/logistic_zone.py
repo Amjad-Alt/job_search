@@ -1,15 +1,11 @@
 
 import pandas as pd
-from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.model_selection import train_test_split, GridSearchCV, learning_curve
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score,plot_confusion_matrix
 import matplotlib.pyplot as plt
-from sklearn.model_selection import learning_curve
 import numpy as np
-from sklearn.metrics import plot_confusion_matrix
-
-
 
 
 # Load and preprocess data
