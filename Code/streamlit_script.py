@@ -1,106 +1,102 @@
 import torch
-from transformers import BertTokenizer, BertModel
-import streamlit as stls
-import streamlit as st
-import pandas as pd
-import numpy as np
+import torch.nn as nn
+from transformers import AutoTokenizer, AutoModel, AutoConfig
 import streamlit as st
 import pdfplumber
 import io
-from transformers import BertTokenizer
-import sys
-import streamlit as st
 import pickle
-# %%
-st.markdown("""
-    <style>
-    .title-box {
-        background-color: lightblue;
-        padding: 7px;
-        border-radius: 5px;
-    }
-    .title-box h1 {
-        color: black;
-        font-size:22px; /* Smaller font size */
-    }
-    </style>
-""", unsafe_allow_html=True)
+import numpy as np
+
+# Define your custom Classifier class
 
 
+class Classifier(nn.Module):
+    def __init__(self, pretrained_model, num_labels):
+        super(Classifier, self).__init__()
+        self.pretrained_model = pretrained_model
+        self.classifier = nn.Linear(
+            pretrained_model.config.hidden_size, num_labels)
+
+    def forward(self, input_ids, attention_mask=None):
+        outputs = self.pretrained_model(
+            input_ids=input_ids, attention_mask=attention_mask)
+        return self.classifier(outputs.pooler_output)
+
+
+# Define a function to load the trained model
+def load_model(model_path, pretrained_model, num_labels):
+    model = Classifier(pretrained_model, num_labels)
+    model.load_state_dict(torch.load(
+        model_path, map_location=torch.device('cpu')))
+    model.eval()  # Set the model to evaluation mode
+    return model
+
+
+# Load the tokenizer for job level prediction
+checkpoint = "bert-base-uncased"
+tokenizer_for_prediction = AutoTokenizer.from_pretrained(checkpoint)
+
+# Load your trained model for job level prediction
+num_labels = 6  # Replace with the number of job level classes
+bert_model_for_prediction = AutoModel.from_pretrained(
+    checkpoint, config=AutoConfig.from_pretrained(checkpoint))
+loaded_model = load_model("./trained_model.pth",
+                          bert_model_for_prediction, num_labels)
+
+# Streamlit app setup
 st.title('We\'re looking for a job')
-
 st.write('Hello, job seekers!')
-
-# Using a div with custom class for styling
 st.markdown('<div class="title-box"><h1>First, upload your resume as a PDF file</h1></div>',
             unsafe_allow_html=True)
+uploaded_file = st.file_uploader("", type="pdf")
 
-# File uploader widget
-uploaded_file = st.file_uploader(" ", type="pdf")
+# Define the function to read and preprocess the PDF for job level prediction
 
 
-def read_pdf(file):
+def read_and_preprocess_for_job_level(file):
     with pdfplumber.open(file) as pdf:
-        pages = [page.extract_text() for page in pdf.pages]
-    return "\n".join(pages)
+        text = "\n".join([page.extract_text()
+                         for page in pdf.pages if page.extract_text()])
+    return text
+
+# Define the function to preprocess text and make predictions for job level
+
+def predict_job_level(text, model, tokenizer):
+    # Tokenize the input text
+    encoded_input = tokenizer(text, return_tensors='pt', max_length=512, truncation=True, padding='max_length')
+    input_ids = encoded_input['input_ids']
+    attention_mask = encoded_input['attention_mask']
+
+    # Run the model to get predictions
+    with torch.no_grad():
+        outputs = model(input_ids=input_ids, attention_mask=attention_mask)
+    
+    # Get the predicted class (job level)
+    prediction = torch.argmax(outputs, dim=-1).item()
+    return prediction
 
 
-def clean_text(text):
-    return text.strip()
-
-
+# Process uploaded file for job level prediction when the button is clicked
 if uploaded_file is not None:
-    bytes_data = uploaded_file.getvalue()
-    text = read_pdf(io.BytesIO(bytes_data))
-    cleaned_text = clean_text(text)
-
+    resume_text_for_job_level = read_and_preprocess_for_job_level(
+        io.BytesIO(uploaded_file.getvalue()))
     st.write('Contents of the uploaded PDF file:')
-    st.text_area(" ", cleaned_text, height=300)
+    st.text_area("Resume Text", resume_text_for_job_level, height=300)
+
+    if st.button('Predict Job Level'):
+        job_level = predict_job_level(
+            resume_text_for_job_level, loaded_model, tokenizer_for_prediction)
+        st.write(f'Recommended Job Level to Apply For: {job_level}')
+
+# Load tokenizer and model for job recommendations
+tokenizer_for_recommendation = AutoTokenizer.from_pretrained(
+    'bert-base-uncased')
+model_for_recommendation = AutoModel.from_pretrained('bert-base-uncased')
+
+# Define function to encode text for job recommendations
 
 
-tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-
-
-def preprocess_text(text):
-    encoded_input = tokenizer(
-        text, return_tensors='pt', max_length=512, truncation=True, padding='max_length')
-
-    return encoded_input
-
-# Load your model (Update this with your actual model loading code)
-# model = load('path/to/your/model.joblib')
-
-
-def predict_job_level(text):
-
-    # Use your model to predict the job level
-    # prediction = model.predict([processed_text])
-    # return prediction
-
-    # Placeholder return
-    return "Senior Level"  # Replace this with actual prediction logic
-
-
-if uploaded_file is not None:
-    # ... [Code to read and clean the PDF text] ...
-
-    preprocessed_text = preprocess_text(cleaned_text)
-
-    # Predict the job level
-    # Update this line with your prediction logic
-    job_level = predict_job_level(preprocessed_text)
-
-    # Display the prediction
-    st.write('Recommended Job Level to Apply For:')
-    st.write(job_level)
-
-# %%
-tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-model = BertModel.from_pretrained('bert-base-uncased')
-
-
-def encode_text(text):
-    # Encode text to BERT's format
+def encode_text(text, tokenizer, model):
     input_ids = tokenizer.encode(
         text, add_special_tokens=True, max_length=512, truncation=True)
     input_ids = torch.tensor([input_ids])
@@ -113,10 +109,12 @@ def encode_text(text):
 with open('job_encodings.pkl', 'rb') as f:
     job_encodings = pickle.load(f)
 
-if uploaded_file is not None:
-    # Process the resume
-    resume_text = read_pdf(io.BytesIO(uploaded_file.getvalue()))
-    resume_encoding = encode_text(resume_text)
+# Recommend jobs based on uploaded file
+if uploaded_file is not None and st.button('Recommend Jobs'):
+    resume_text_for_recommendation = read_and_preprocess_for_job_level(
+        io.BytesIO(uploaded_file.getvalue()))
+    resume_encoding = encode_text(
+        resume_text_for_recommendation, tokenizer_for_recommendation, model_for_recommendation)
 
     # Compute similarities
     scores = {}
@@ -125,12 +123,8 @@ if uploaded_file is not None:
             resume_encoding) * np.linalg.norm(job_encoding))  # Cosine similarity
         scores[job_title] = score
 
-    # Recommend job
-    recommended_jobs = sorted(scores, key=scores.get, reverse=True)[
-        :5]  # Top 5 recommendations
-    st.write(f"Top job recommendations based on your resume:")
+    # Display job recommendations
+    recommended_jobs = sorted(scores, key=scores.get, reverse=True)[:5]
+    st.write("Top job recommendations based on your resume:")
     for job in recommended_jobs:
         st.write(job)
-
-
-# %%
