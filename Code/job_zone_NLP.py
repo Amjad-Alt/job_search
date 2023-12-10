@@ -9,15 +9,17 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from datasets import load_dataset, DatasetDict, load_metric
-from transformers import (AutoTokenizer, AutoModelForSequenceClassification,
+from transformers import (AutoTokenizer, AutoModel,
                           AutoConfig, DataCollatorWithPadding, AdamW, get_scheduler)
 from tqdm.auto import tqdm
 from sklearn.metrics import accuracy_score
+from transformers import Trainer
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, accuracy_score
+import matplotlib.pyplot as plt
+import numpy as np
 sys.path.insert(0, os.getcwd())
 
 # Load and preprocess data
-
-
 def create_zone_model_data():
     url = 'https://raw.githubusercontent.com/Amjad-Alt/job_search/Nammin-Woo/Data_cleaned/df_Occupation.csv'
     df_job = pd.read_csv(url)
@@ -75,8 +77,6 @@ tokenized_dataset.set_format(
     "torch", columns=["input_ids", "attention_mask", "label"])
 
 # Define Classifier
-
-
 class Classifier(nn.Module):
     def __init__(self, pretrained_model, num_labels):
         super(Classifier, self).__init__()
@@ -112,8 +112,6 @@ lr_scheduler = get_scheduler("linear", optimizer=optimizer, num_warmup_steps=0,
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Function to train and evaluate model
-
-
 def train_and_evaluate(model, train_dataloader, eval_dataloader, optimizer, lr_scheduler, device, num_epochs):
     # Training loop
     model.train()
@@ -191,7 +189,52 @@ print(
     f"Best Hyperparameters: {best_hyperparameters}, Best Accuracy: {best_accuracy:.4f}")
 
 # Define the path to save the model
-# model_save_path = "./trained_model2.pth"
+# model_save_path = "./trained_model.pth"
 
 # Save the model's state dictionary
 # torch.save(model.state_dict(), model_save_path)
+
+best_model_path = "trained_model.pth"  # Update this with the actual path
+
+# Load the best model
+best_model = Classifier(AutoModel.from_pretrained(checkpoint, config=AutoConfig.from_pretrained(checkpoint)), num_labels)
+best_model.load_state_dict(torch.load(best_model_path))
+best_model.to(device)
+best_model.eval()
+
+# Function to make predictions on the test set
+def make_predictions(model, dataloader):
+    model.eval()
+    predictions = []
+    real_labels = []
+
+    with torch.no_grad():
+        for batch in dataloader:
+            input_ids = batch['input_ids'].to(device)
+            attention_mask = batch['attention_mask'].to(device)
+            labels = batch['labels'].to(device)
+
+            outputs = model(input_ids=input_ids, attention_mask=attention_mask)
+            logits = outputs
+            preds = torch.argmax(logits, dim=-1)
+
+            predictions.extend(preds.cpu().numpy())
+            real_labels.extend(labels.cpu().numpy())
+
+    return np.array(predictions), np.array(real_labels)
+
+# Make predictions
+predictions, real_labels = make_predictions(best_model, eval_dataloader)
+
+# Calculate accuracy
+accuracy = accuracy_score(real_labels, predictions)
+print(f"Accuracy: {accuracy:.4f}")
+
+# Plot the confusion matrix
+cm = confusion_matrix(real_labels, predictions)
+disp = ConfusionMatrixDisplay(confusion_matrix=cm)
+disp.plot(cmap=plt.cm.Blues)
+plt.title('Confusion Matrix')
+plt.show()
+
+
