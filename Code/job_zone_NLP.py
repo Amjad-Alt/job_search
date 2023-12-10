@@ -161,14 +161,7 @@ for lr, batch_size, num_epochs in itertools.product(learning_rates, batch_sizes,
 print(f"Best Hyperparameters: {best_hyperparameters}, Best Accuracy: {best_accuracy:.4f}")
 
 # Define the path to save the model
-model_save_path = "./trained_model2.pth"
+#model_save_path = "./trained_model2.pth"
 
 # Save the model's state dictionary
-torch.save(model.state_dict(), model_save_path)
-
-# Load the model
-def load_model(model_path, pretrained_model, num_labels):
-    model = Classifier(pretrained_model, num_labels)
-    model.load_state_dict(torch.load(model_path))
-    model.eval()  # Set the model to evaluation mode
-    return model
+#torch.save(model.state_dict(), model_save_path)
