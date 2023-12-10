@@ -37,10 +37,10 @@ checkpoint = "bert-base-uncased"
 tokenizer_for_prediction = AutoTokenizer.from_pretrained(checkpoint)
 
 # Load your trained model for job level prediction
-num_labels = 6  # Replace with the number of job level classes
+num_labels = 5  # Replace with the number of job level classes
 bert_model_for_prediction = AutoModel.from_pretrained(
     checkpoint, config=AutoConfig.from_pretrained(checkpoint))
-loaded_model = load_model("./trained_model.pth",
+loaded_model = load_model("./trained_model2.pth",
                           bert_model_for_prediction, num_labels)
 
 # Streamlit app setup
@@ -92,10 +92,8 @@ def get_job_level_info(prediction):
                          "to be considered qualified."),
         4: ("Senior", "Extensive skill, knowledge, and experience are needed for these occupations. Many require more than five "
                       "years of experience. For example, surgeons must complete four years of college and an additional five to "
-                      "seven years of specialized medical training to be able to do their job."),
-        5: ("Manager", "Extensive skill, knowledge, and experience are needed for these occupations. Many require more than five "
-            "years of experience. For example, surgeons must complete four years of college and an additional five to "
-            "seven years of specialized medical training to be able to do their job.")
+                      "seven years of specialized medical training to be able to do their job.")
+
     }
 
     # Return the corresponding job level information (title and description)
