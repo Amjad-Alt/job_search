@@ -1,10 +1,10 @@
 import pandas as pd
-from sklearn.model_selection import train_test_split, GridSearchCV, learning_curve
+import numpy as np
+from sklearn.model_selection import train_test_split, GridSearchCV, learning_curve, StratifiedKFold
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
 from sklearn.metrics import accuracy_score, plot_confusion_matrix
 import matplotlib.pyplot as plt
-import numpy as np
 
 # Load and preprocess data
 def create_zone_model_data():
@@ -28,7 +28,7 @@ df_job = create_zone_model_data()
 train_texts, test_texts, train_labels, test_labels = train_test_split(df_job['combined_text'], df_job['label'], test_size=0.3, random_state=42)
 
 # Feature extraction with TF-IDF
-vectorizer = TfidfVectorizer(max_features=5000)
+vectorizer = TfidfVectorizer(max_features=3000)  # Reduced max_features for potential better generalization
 X_train = vectorizer.fit_transform(train_texts)
 X_test = vectorizer.transform(test_texts)
 
@@ -36,10 +36,13 @@ X_test = vectorizer.transform(test_texts)
 nb_model = MultinomialNB()
 
 # Define grid search parameters for Naive Bayes
-param_grid = {'alpha': [0.1, 1, 10]}
+param_grid = {'alpha': np.linspace(0.01, 1, 20)}  # Using finer steps in alpha to find the optimal regularization parameter
+
+# Stratified K-Fold for handling class imbalances
+stratified_k_fold = StratifiedKFold(n_splits=5)
 
 # Grid search for Naive Bayes
-grid_search = GridSearchCV(nb_model, param_grid, cv=3, scoring='accuracy')
+grid_search = GridSearchCV(nb_model, param_grid, cv=stratified_k_fold, scoring='accuracy')
 grid_search.fit(X_train, train_labels)
 
 # Best hyperparameters
