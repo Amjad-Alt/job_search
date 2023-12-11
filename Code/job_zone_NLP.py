@@ -17,15 +17,19 @@ sys.path.insert(0, os.getcwd())
 
 # Load and preprocess data
 
-
+#%%
 def create_zone_model_data():
     url = 'https://raw.githubusercontent.com/Amjad-Alt/job_search/Nammin-Woo/Data_cleaned/df_Occupation.csv'
     df_job = pd.read_csv(url)
     df_job.dropna(subset=['Job Zone'], inplace=True)
 
-    # Concatenate the text columns
+    # Concatenate the text columns #
     text_columns = ['Description', 'Description_Abilities',
                     'Description_Knowledge', 'Description_Skills']
+
+    # text_columns = ['Description', 'Description_Abilities' 'Description_Knowledge',
+    #                 'Description_Skills', 'Description_Tech', 'Description_Interests']
+
     df_job['combined_text'] = df_job[text_columns].fillna(
         '').agg(' '.join, axis=1)
 
@@ -75,8 +79,6 @@ tokenized_dataset.set_format(
     "torch", columns=["input_ids", "attention_mask", "label"])
 
 # Define Classifier
-
-
 class Classifier(nn.Module):
     def __init__(self, pretrained_model, num_labels):
         super(Classifier, self).__init__()
@@ -91,7 +93,7 @@ class Classifier(nn.Module):
 
 
 # Model setup
-num_labels = 6
+num_labels = 5
 model = Classifier(AutoModel.from_pretrained(checkpoint, config=AutoConfig.from_pretrained(
     checkpoint)), num_labels).to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
 
@@ -154,7 +156,7 @@ def train_and_evaluate(model, train_dataloader, eval_dataloader, optimizer, lr_s
 
 # Hyperparameters for grid search
 learning_rates = [1e-5, 3e-5, 5e-5]
-batch_sizes = [8, 16, 32]
+batch_sizes = [8, 16]
 num_epochs_options = [3, 4]
 
 # Grid search

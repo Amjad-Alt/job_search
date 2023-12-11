@@ -1,6 +1,6 @@
 #%%
-# import os
-# os.chdir(os.path.join('/home/ubuntu', 'Project'))
+import os
+os.chdir(os.path.join('/home/ubuntu', 'Project'))
 #%%
 # Import
 import os
