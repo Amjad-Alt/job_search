@@ -313,7 +313,7 @@ for idx,i in enumerate(datasets):
 #%%
 df = df.fillna('')   # concatenate of NaN value with strings results in a NaN (So need to convert into blank)
 # Make Full_Job_Description corpus Column
-df['Description_Job'] = df['Title'] + ' ' + df['Description'] + ' ' + df['Description_Abilities'] \
+df['Description_Job'] = df['Description'] + ' ' + df['Description_Abilities'] \
                         + ' ' + df['Description_Knowledge'] + ' ' + df['Description_Skills'] \
                         + ' ' + df['Description_Tech'] + ' ' + df['Description_Interests']
 #%%

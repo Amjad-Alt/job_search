@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from transformers import AutoTokenizer, AutoModel, AutoConfig
+from sentence_transformers import SentenceTransformer
 import streamlit as st
 import pdfplumber
 import io
@@ -37,10 +38,10 @@ checkpoint = "bert-base-uncased"
 tokenizer_for_prediction = AutoTokenizer.from_pretrained(checkpoint)
 
 # Load your trained model for job level prediction
-num_labels = 6  # Replace with the number of job level classes
+num_labels = 5  # Replace with the number of job level classes
 bert_model_for_prediction = AutoModel.from_pretrained(
     checkpoint, config=AutoConfig.from_pretrained(checkpoint))
-loaded_model = load_model("./trained_model.pth",
+loaded_model = load_model("./trained_model2.pth",
                           bert_model_for_prediction, num_labels)
 
 # Streamlit app setup
@@ -92,10 +93,8 @@ def get_job_level_info(prediction):
                          "to be considered qualified."),
         4: ("Senior", "Extensive skill, knowledge, and experience are needed for these occupations. Many require more than five "
                       "years of experience. For example, surgeons must complete four years of college and an additional five to "
-                      "seven years of specialized medical training to be able to do their job."),
-        5: ("Manager", "Extensive skill, knowledge, and experience are needed for these occupations. Many require more than five "
-            "years of experience. For example, surgeons must complete four years of college and an additional five to "
-            "seven years of specialized medical training to be able to do their job.")
+                      "seven years of specialized medical training to be able to do their job.")
+
     }
 
     # Return the corresponding job level information (title and description)
@@ -115,21 +114,26 @@ if uploaded_file is not None:
         st.write(f'**Recommended Job Level to Apply For:** {job_level_title}')
         st.write(job_level_description)
 # Load tokenizer and model for job recommendations
-tokenizer_for_recommendation = AutoTokenizer.from_pretrained(
-    'bert-base-uncased')
-model_for_recommendation = AutoModel.from_pretrained('bert-base-uncased')
+# tokenizer_for_recommendation = AutoTokenizer.from_pretrained(
+#     'bert-base-uncased')
+# model_for_recommendation = AutoModel.from_pretrained('bert-base-uncased')
 
 # Define function to encode text for job recommendations
 
 
-def encode_text(text, tokenizer, model):
-    input_ids = tokenizer.encode(
-        text, add_special_tokens=True, max_length=512, truncation=True)
-    input_ids = torch.tensor([input_ids])
-    with torch.no_grad():
-        outputs = model(input_ids)
-    return outputs[0][0].mean(dim=0).numpy()  # Mean pooling
+# def encode_text(text, tokenizer, model):
+#     input_ids = tokenizer.encode(
+#         text, add_special_tokens=True, max_length=512, truncation=True)
+#     input_ids = torch.tensor([input_ids])
+#     with torch.no_grad():
+#         outputs = model(input_ids)
+#     return outputs[0][0].mean(dim=0).numpy()  # Mean pooling
 
+
+def encode_resume_text(text):
+    model = SentenceTransformer('bert-base-nli-mean-tokens')
+    sentence_embeddings = model.encode(text)
+    return sentence_embeddings
 
 # Load the precomputed job encodings
 with open('job_encodings.pkl', 'rb') as f:
@@ -139,9 +143,9 @@ with open('job_encodings.pkl', 'rb') as f:
 if uploaded_file is not None and st.button('Recommend Jobs'):
     resume_text_for_recommendation = read_and_preprocess_for_job_level(
         io.BytesIO(uploaded_file.getvalue()))
-    resume_encoding = encode_text(
-        resume_text_for_recommendation, tokenizer_for_recommendation, model_for_recommendation)
-
+    # resume_encoding = encode_text(
+    #     resume_text_for_recommendation, tokenizer_for_recommendation, model_for_recommendation)
+    resume_encoding = encode_resume_text(resume_text_for_recommendation)
     # Compute similarities
     scores = {}
     for job_title, job_encoding in job_encodings.items():
