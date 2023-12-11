@@ -23,7 +23,7 @@ sys.path.insert(0, os.getcwd())
 # Load and preprocess data
 
 def create_zone_model_data():
-    url = 'https://raw.githubusercontent.com/Amjad-Alt/job_search/Nammin-Woo/Data_cleaned/df_Occupation.csv'
+    url = 'https://raw.githubusercontent.com/Amjad-Alt/job_search/Nammin-Woo/Data_cleaned/df_Occupation_v2.csv'
     df_job = pd.read_csv(url)
     df_job.dropna(subset=['Job Zone'], inplace=True)
 

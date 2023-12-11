@@ -1,4 +1,20 @@
-#  Section 1. Read O*NET® 28.0 Database on the WEB
+#  Below table shows final codes in this project. 
+     
+    - Codes contain from creating data, training model, and Web application code. 
+    - Number means order of running.
+    - Three codes (#1,#2,#5) generate outputs that are used in other codes.
+
+| Code                                         | Goal                                        | Output                              |
+|----------------------------------------------|---------------------------------------------|-------------------------------------|
+| Utils_Team2                                  | Gather user-defined functions                |                                     |
+| 1.Create_Job_Corpus_Data_Team2               | Create Job corpus                           | df_Occupation.csv/pkl              |
+| 2.Train_Model_Job_level_Classification_Team2 | Final model (Finetune_BERT)      | trained_model.pth                   |
+| 3.logistic_zone                              | Train Classical model (Logistic Regression) |                                     |
+| 4.MLP_zone                                   | Train Classical model (Naive Bayes)         |                                     |
+| 5.Semantic_Similarity_Search_Team2           | Get embedding vector of Job corpus         | job_encodings.pkl                   |
+| 6.Streamlit_script                           | Run Streamlit App                           |                                     |
+
+##  Summary of Getting O*NET® 28.0 Database and Preprocessing it
 
 ###  1. Get Raw data (40 individual files were ziped) was downloaded on the Web download link 
 
@@ -44,7 +60,7 @@
        2. Make Job_Description corpus of each category datasets 
        *Rule (pay attention to Key elements in an Occupation)
        Step 0. Start from the first Category (ex. Ability)
-       step 1. Choose High Demand Elements in an Occupation (Level Demand ratio over 50%, Pick Top 3)
+       step 1. Choose High Demand Elements in an Occupation (Level Demand ratio over 50%, Pick Top 5)
        step 2. Create Description column by an Occupation: (ex. Description_Abilities)
        'Category: + 'Descriptions of High Demand elements
        (ex) Abilities: The ability to A ...  The ability to B ... The ability to C ...
@@ -102,142 +118,105 @@
         Shape of resume_data_cleaned: (962, 2)
 
 
-#%%
-''' #1. Abilities: Title-Element-Scale'''
-#%%  : Unfold below to see details
-'''
-['O*NET-SOC Code', 'Element ID', 'Element Name', 'Scale ID', 'Data Value',
-  ...'Date', 'Domain Source']
-  
+# 1. Abilities: Title-Element-Scale
+
+| O*NET-SOC Code | Element ID | Element Name | Scale ID | Data Value | Date | Domain Source |
+|----------------|------------|--------------|----------|------------|------|---------------|
+| ...            | ...        | ...          | ...      | ...        | ...  | ...           |
+
 - PK: SOC Code (873 Occupations) - Element (52 Abilities) - Scale ID (2 Types of value)
-- 90792 records (873 * 52 * 2)
-- Two Text descriptions: Description_SOC(Job),  Description_Ele(Abilities)
-- Created 'Value_ratio' : Data Value/Maximum
-- Example 
-: *** idea 
-: Problem Sensitivity ability in Statisticians occupation need Level, have importance
-   
-               Title         Element Name  Scale Name  Minimum  Maximum  Data Value  Value_ratio
-12180  Statisticians  Problem Sensitivity  Importance        1        5        3.38     0.676000
-12181  Statisticians  Problem Sensitivity       Level        0        7        3.75     0.535714
-  
-'''
+  - 90792 records (873 * 52 * 2)
+  - Two Text descriptions: Description_SOC(Job), Description_Ele(Abilities)
+  - Created 'Value_ratio': Data Value/Maximum
+  - Example: 
+    - Idea
+    - Problem Sensitivity ability in Statisticians occupation needs level, has importance
 
-#%%
-''' #2. Interests: Title-Element-Scale'''
-#%%  : Unfold below to see details
-'''
-# Contents data - #2. Interests: Key-Title O*NET-SOC Code:
+| Title         | Element Name         | Scale Name | Minimum | Maximum | Data Value | Value_ratio |
+|---------------|----------------------|------------|---------|---------|------------|-------------|
+| Statisticians | Problem Sensitivity  | Importance | 1       | 5       | 3.38       | 0.676       |
+| Statisticians | Problem Sensitivity  | Level      | 0       | 7       | 3.75       | 0.536       |
 
-              Title   Element Name              Scale Name  Minimum  Maximum  Data Value  Value_ratio
-1062  Statisticians      Realistic  Occupational Interests        1        7        2.33     0.332857
-1063  Statisticians  Investigative  Occupational Interests        1        7        6.00     0.857143
-1064  Statisticians       Artistic  Occupational Interests        1        7        2.00     0.285714
-1065  Statisticians         Social  Occupational Interests        1        7        1.00     0.142857
-1066  Statisticians   Enterprising  Occupational Interests        1        7        2.00     0.285714
-1067  Statisticians   Conventional  Occupational Interests        1        7        6.33     0.904286
-'''
+# 2. Interests: Title-Element-Scale
 
-#%%
-''' #3. Knowledge: Title-Element-Scale'''
-#%%  : Unfold below to see details
-'''
-# Contents data(Sample) :
-              Title    Element Name  Scale Name  Minimum  Maximum  Data Value  Value_ratio
-7724  Statisticians  Administrative  Importance        1        5        1.72     0.344000
-7725  Statisticians  Administrative       Level        0        7        1.94     0.277143
-              Title                   Element Name  Scale Name  Minimum  Maximum  Data Value  Value_ratio
-7722  Statisticians  Administration and Management  Importance        1        5        2.21        0.442
-7724  Statisticians                 Administrative  Importance        1        5        1.72        0.344
-7726  Statisticians       Economics and Accounting  Importance        1        5        1.78        0.356
-7728  Statisticians            Sales and Marketing  Importance        1        5        1.44        0.288
-'''
+[Contents data - #2. Interests: Key-Title O*NET-SOC Code]
 
-#%%
-''' #4. Skills: Title-Element-Scale'''
-#%%  : Unfold below to see details
-'''
-# Contents data(Sample) :
-              Title Element Name  Scale Name  Minimum  Maximum  Data Value  Value_ratio
-8194  Statisticians      Writing  Importance        1        5        3.50     0.700000
-8195  Statisticians      Writing       Level        0        7        4.38     0.625714
-              Title                       Element Name  Scale Name  Minimum  Maximum  Data Value  Value_ratio
-8190  Statisticians              Reading Comprehension  Importance        1        5        4.00        0.800
-8192  Statisticians                   Active Listening  Importance        1        5        3.88        0.776
-8194  Statisticians                            Writing  Importance        1        5        3.50        0.700
-'''
+| Title         | Element Name      | Scale Name               | Minimum | Maximum | Data Value | Value_ratio |
+|---------------|-------------------|--------------------------|---------|---------|------------|-------------|
+| Statisticians | Realistic         | Occupational Interests    | 1       | 7       | 2.33       | 0.333       |
+| Statisticians | Investigative     | Occupational Interests    | 1       | 7       | 6.00       | 0.857       |
+| ...           | ...               | ...                      | ...     | ...     | ...        | ...         |
 
-#%%
-''' #5. Technology Skills: Title-Example (No element and Scale)'''
-#%%  : Unfold below to see details
-'''
-# Contents data(Sample) :
- O*NET-SOC Code          Title                                      Example  Commodity Code                                    Commodity Title Hot Technology In Demand
-11711     15-2041.00  Statisticians                              Amazon Redshift        43232306        Data base user interface and query software              Y         N
-11713     15-2041.00  Statisticians                                Apache Hadoop        43232304               Data base management system software              Y         N
+# 3. Knowledge: Title-Element-Scale
 
-      O*NET-SOC Code          Title                         Example  Commodity Code                                    Commodity Title Hot Technology In Demand
-11724     15-2041.00  Statisticians  Extensible markup language XML        43232403        Enterprise application integration software              Y         Y
-11734     15-2041.00  Statisticians                 Microsoft Excel        43232110                               Spreadsheet software              Y         Y
-'''
+[Contents data(Sample)]
 
+| Title         | Element Name                   | Scale Name | Minimum | Maximum | Data Value | Value_ratio |
+|---------------|--------------------------------|------------|---------|---------|------------|-------------|
+| Statisticians | Administrative                 | Importance | 1       | 5       | 1.72       | 0.344       |
+| Statisticians | Administration and Management  | Importance | 1       | 5       | 2.21       | 0.442       |
+| ...           | ...                            | ...        | ...     | ...     | ...        | ...         |
 
-#%%
-''' #6. Tools Used: Title-Example (No element and Scale)'''
-#%%  : Unfold below to see details
-'''
-# Contents data(Sample) :
- O*NET-SOC Code          Title             Example  Commodity Code     Commodity Title
-1697     15-2041.00  Statisticians   Desktop computers        43211507   Desktop computers
-1698     15-2041.00  Statisticians    Laptop computers        43211503  Notebook computers
-1699     15-2041.00  Statisticians  Personal computers        43211508  Personal computers
-'''
+# 4. Skills: Title-Element-Scale
 
-#%%
-''' #7. Work Activities: Title-Element-Scale'''
-#%%  : Unfold below to see details
-'''
-# Contents data(Sample) :
-              Title         Element Name  Scale Name  Minimum  Maximum  Data Value  Value_ratio
-9594  Statisticians  Getting Information  Importance        1        5         4.5     0.900000
-9595  Statisticians  Getting Information       Level        0        7         5.2     0.742857
-              Title                                                                     Element Name  Scale Name  Minimum  Maximum  Data Value  Value_ratio
-9594  Statisticians                                                              Getting Information  Importance        1        5        4.50        0.900
-9596  Statisticians                                 Monitoring Processes, Materials, or Surroundings  Importance        1        5        2.25        0.450
-9598  Statisticians                                         Identifying Objects, Actions, and Events  Importance        1        5        3.40        0.680
-'''
-#%%
+[Contents data(Sample)]
 
+| Title         | Element Name            | Scale Name | Minimum | Maximum | Data Value | Value_ratio |
+|---------------|-------------------------|------------|---------|---------|------------|-------------|
+| Statisticians | Writing                 | Importance | 1       | 5       | 3.50       | 0.700       |
+| Statisticians | Reading Comprehension   | Importance | 1       | 5       | 4.00       | 0.800       |
+| ...           | ...                     | ...        | ...     | ...     | ...        | ...         |
 
-#%%
-''' #8. Work Context: Title-Element-Scale-Category(Nan, Category)'''
-#%%  : Unfold below to see details
-'''
-# Contents data(Sample) :
-               Title              Element Name                Scale Name  Minimum  Maximum  Category                     Category Description  Data Value  Value_ratio
-37884  Statisticians  Face-to-Face Discussions                   Context        1        5       NaN                                      NaN         4.4         0.88
-37885  Statisticians  Face-to-Face Discussions  Context (Categories 1-5)        0      100       1.0                                    Never         0.0         0.00
-37886  Statisticians  Face-to-Face Discussions  Context (Categories 1-5)        0      100       2.0  Once a year or more but not every month         0.0         0.00
-37887  Statisticians  Face-to-Face Discussions  Context (Categories 1-5)        0      100       3.0  Once a month or more but not every week         0.0         0.00
-37888  Statisticians  Face-to-Face Discussions  Context (Categories 1-5)        0      100       4.0    Once a week or more but not every day        60.0         0.60
-37889  Statisticians  Face-to-Face Discussions  Context (Categories 1-5)        0      100       5.0                                Every day        40.0         0.40
-'''
-#%%
+# 5. Technology Skills: Title-Example (No element and Scale)
 
-#%%
-''' #9. Work Styles: Title-Element-Scale'''
-#%%  : Unfold below to see details
-'''
-# Contents data(Sample) :
-        Title Element Name  Scale Name  Minimum  Maximum  Data Value  Value_ratio
-1873  Statisticians  Persistence  Importance        1        5         4.0          0.8
-'''
+[Contents data(Sample)]
 
-#%%
-''' #10. Work Values: Title-Element-Scale'''
-#%%  : Unfold below to see details
-'''
-# Contents data(Sample) :
-            Title   Element Name Scale Name  Minimum  Maximum  Data Value  Value_ratio
-1065  Statisticians  Relationships     Extent        1        7        4.67     0.667143
-'''
+| O*NET-SOC Code | Title         | Example                       | Commodity Code | Commodity Title                        | Hot Technology In Demand |
+|----------------|---------------|-------------------------------|----------------|----------------------------------------|--------------------------|
+| 15-2041.00     | Statisticians | Amazon Redshift               | 43232306       | Data base user interface and query...  | Y                        |
+| ...            | ...           | ...                           | ...            | ...                                    | ...                      |
+
+# 6. Tools Used: Title-Example (No element and Scale)
+
+[Contents data(Sample)]
+
+| O*NET-SOC Code | Title         | Example            | Commodity Code | Commodity Title    |
+|----------------|---------------|--------------------|----------------|---------------------|
+| 15-2041.00     | Statisticians | Desktop computers | 43211507       | Desktop computers  |
+| ...            | ...           | ...                | ...            | ...                 |
+
+# 7. Work Activities: Title-Element-Scale
+
+[Contents data(Sample)]
+
+| Title         | Element Name                      | Scale Name | Minimum | Maximum | Data Value | Value_ratio |
+|---------------|-----------------------------------|------------|---------|---------|------------|-------------|
+| Statisticians | Getting Information                | Importance | 1       | 5       | 4.5        | 0.9         |
+| ...           | ...                               | ...        | ...     | ...     | ...        | ...         |
+
+# 8. Work Context: Title-Element-Scale-Category(Nan, Category)
+
+[Contents data(Sample)]
+
+| Title         | Element Name                    | Scale Name          | Minimum | Maximum | Category | Category Description              | Data Value | Value_ratio |
+|---------------|---------------------------------|---------------------|---------|---------|----------|----------------------------------|------------|-------------|
+| Statisticians | Face-to-Face Discussions         | Context             | 1       | 5       | NaN      | NaN                              | 4.4        | 0.88        |
+| ...           | ...                             | ...                 | ...     | ...     | ...      | ...                              | ...        | ...         |
+
+# 9. Work Styles: Title-Element-Scale
+
+[Contents data(Sample)]
+
+| Title         | Element Name   | Scale Name | Minimum | Maximum | Data Value | Value_ratio |
+|---------------|----------------|------------|---------|---------|------------|-------------|
+| Statisticians | Persistence    | Importance | 1       | 5       | 4.0        | 0.8         |
+| ...           | ...            | ...        | ...     | ...     | ...        | ...         |
+
+# 10. Work Values: Title-Element-Scale
+
+[Contents data(Sample)]
+
+| Title         | Element Name   | Scale Name | Minimum | Maximum | Data Value | Value_ratio |
+|---------------|----------------|------------|---------|---------|------------|-------------|
+| Statisticians | Relationships  | Extent     | 1       | 7       | 4.67       | 0.667       |
+| ...           | ...            | ...        | ...     | ...     | ...        | ...         |
