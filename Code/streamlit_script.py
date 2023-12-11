@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from transformers import AutoTokenizer, AutoModel, AutoConfig
+from sentence_transformers import SentenceTransformer
 import streamlit as st
 import pdfplumber
 import io
@@ -113,21 +114,26 @@ if uploaded_file is not None:
         st.write(f'**Recommended Job Level to Apply For:** {job_level_title}')
         st.write(job_level_description)
 # Load tokenizer and model for job recommendations
-tokenizer_for_recommendation = AutoTokenizer.from_pretrained(
-    'bert-base-uncased')
-model_for_recommendation = AutoModel.from_pretrained('bert-base-uncased')
+# tokenizer_for_recommendation = AutoTokenizer.from_pretrained(
+#     'bert-base-uncased')
+# model_for_recommendation = AutoModel.from_pretrained('bert-base-uncased')
 
 # Define function to encode text for job recommendations
 
 
-def encode_text(text, tokenizer, model):
-    input_ids = tokenizer.encode(
-        text, add_special_tokens=True, max_length=512, truncation=True)
-    input_ids = torch.tensor([input_ids])
-    with torch.no_grad():
-        outputs = model(input_ids)
-    return outputs[0][0].mean(dim=0).numpy()  # Mean pooling
+# def encode_text(text, tokenizer, model):
+#     input_ids = tokenizer.encode(
+#         text, add_special_tokens=True, max_length=512, truncation=True)
+#     input_ids = torch.tensor([input_ids])
+#     with torch.no_grad():
+#         outputs = model(input_ids)
+#     return outputs[0][0].mean(dim=0).numpy()  # Mean pooling
 
+
+def encode_resume_text(text):
+    model = SentenceTransformer('bert-base-nli-mean-tokens')
+    sentence_embeddings = model.encode(text)
+    return sentence_embeddings
 
 # Load the precomputed job encodings
 with open('job_encodings.pkl', 'rb') as f:
@@ -137,9 +143,9 @@ with open('job_encodings.pkl', 'rb') as f:
 if uploaded_file is not None and st.button('Recommend Jobs'):
     resume_text_for_recommendation = read_and_preprocess_for_job_level(
         io.BytesIO(uploaded_file.getvalue()))
-    resume_encoding = encode_text(
-        resume_text_for_recommendation, tokenizer_for_recommendation, model_for_recommendation)
-
+    # resume_encoding = encode_text(
+    #     resume_text_for_recommendation, tokenizer_for_recommendation, model_for_recommendation)
+    resume_encoding = encode_resume_text(resume_text_for_recommendation)
     # Compute similarities
     scores = {}
     for job_title, job_encoding in job_encodings.items():

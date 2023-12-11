@@ -132,6 +132,7 @@ def Get_Job_Recommendation_Semantic_Similarity(df, category, num_samples, number
     print("Semantic Search Results")
     # Find the closest N sentences of the corpus for each query sentence based on cosine similarity
     model = SentenceTransformer('bert-base-nli-mean-tokens')  # Test
+    sentence_embeddings = np.load('Job_corpus_embeddings.npy')
     for idx, q in enumerate(query):
         queries = [q]
         query_embeddings = model.encode(queries)
