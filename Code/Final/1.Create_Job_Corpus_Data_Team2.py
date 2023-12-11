@@ -109,5 +109,10 @@ print('Finished every process of Creating Job Corpus\n')
 # init_chk_df_2(df_job)
 # print(df_job.columns.to_list())
 
-
-
+#%%
+temp = df_job['Title'] == 'Data Scientists'
+temp2 = df_job[temp]['Description_Job']
+#%%
+print(temp2)
+#%%
+#3500
