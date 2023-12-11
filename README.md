@@ -120,18 +120,17 @@
 
 # 1. Abilities: Title-Element-Scale
 
-| O*NET-SOC Code | Element ID | Element Name | Scale ID | Data Value | Date | Domain Source |
-|----------------|------------|--------------|----------|------------|------|---------------|
-| ...            | ...        | ...          | ...      | ...        | ...  | ...           |
-
 - PK: SOC Code (873 Occupations) - Element (52 Abilities) - Scale ID (2 Types of value)
   - 90792 records (873 * 52 * 2)
   - Two Text descriptions: Description_SOC(Job), Description_Ele(Abilities)
   - Created 'Value_ratio': Data Value/Maximum
-  - Example: 
-    - Idea
-    - Problem Sensitivity ability in Statisticians occupation needs level, has importance
-
+  - Element: 
+    - Name 
+    - Description (from Base information table) 
+    
+    ex.Problem Sensitivity ability:The ability to tell when something is wrong or is likely to go wrong. 
+    It does not involve solving the problem, only recognizing that there is a problem.
+  
 | Title         | Element Name         | Scale Name | Minimum | Maximum | Data Value | Value_ratio |
 |---------------|----------------------|------------|---------|---------|------------|-------------|
 | Statisticians | Problem Sensitivity  | Importance | 1       | 5       | 3.38       | 0.676       |
